@@ -1,0 +1,280 @@
+[
+  {
+    "type": "VM",
+    "node": "the-banished",
+    "vmid": 108,
+    "name": "JAOSD",
+    "status": "stopped",
+    "cpu_percent": 0.0,
+    "memory_used_bytes": 0,
+    "memory_max_bytes": 8589934592,
+    "memory_percent": 0.0,
+    "network_config": {
+      "net0": "virtio=BC:24:11:79:D6:C3,bridge=vmbr1,firewall=1"
+    },
+    "ips": [],
+    "snapshots": []
+  },
+  {
+    "type": "VM",
+    "node": "the-banished",
+    "vmid": 101,
+    "name": "MC-Server",
+    "status": "stopped",
+    "cpu_percent": 0.0,
+    "memory_used_bytes": 0,
+    "memory_max_bytes": 6442450944,
+    "memory_percent": 0.0,
+    "network_config": {
+      "net0": "virtio=BC:24:11:D8:3F:68,bridge=vmbr0,firewall=1"
+    },
+    "ips": [],
+    "snapshots": []
+  },
+  {
+    "type": "VM",
+    "node": "the-banished",
+    "vmid": 202,
+    "name": "SolidState",
+    "status": "stopped",
+    "cpu_percent": 0.0,
+    "memory_used_bytes": 0,
+    "memory_max_bytes": 2147483648,
+    "memory_percent": 0.0,
+    "network_config": {
+      "net0": "e1000=BC:24:11:6C:85:66,bridge=vmbr1"
+    },
+    "ips": [],
+    "snapshots": []
+  },
+  {
+    "type": "VM",
+    "node": "the-banished",
+    "vmid": 204,
+    "name": "MrRobot",
+    "status": "stopped",
+    "cpu_percent": 0.0,
+    "memory_used_bytes": 0,
+    "memory_max_bytes": 2147483648,
+    "memory_percent": 0.0,
+    "network_config": {
+      "net0": "e1000=BC:24:11:E7:FE:21,bridge=vmbr1"
+    },
+    "ips": [],
+    "snapshots": []
+  },
+  {
+    "type": "VM",
+    "node": "the-banished",
+    "vmid": 200,
+    "name": "metasploitable2",
+    "status": "stopped",
+    "cpu_percent": 0.0,
+    "memory_used_bytes": 0,
+    "memory_max_bytes": 1073741824,
+    "memory_percent": 0.0,
+    "network_config": {
+      "net0": "e1000=BC:24:11:81:34:F4,bridge=vmbr1"
+    },
+    "ips": [],
+    "snapshots": []
+  },
+  {
+    "type": "VM",
+    "node": "the-banished",
+    "vmid": 201,
+    "name": "Zico2",
+    "status": "stopped",
+    "cpu_percent": 0.0,
+    "memory_used_bytes": 0,
+    "memory_max_bytes": 1073741824,
+    "memory_percent": 0.0,
+    "network_config": {
+      "net0": "e1000=BC:24:11:A6:80:20,bridge=vmbr1"
+    },
+    "ips": [],
+    "snapshots": []
+  },
+  {
+    "type": "VM",
+    "node": "the-banished",
+    "vmid": 203,
+    "name": "SkyTower",
+    "status": "stopped",
+    "cpu_percent": 0.0,
+    "memory_used_bytes": 0,
+    "memory_max_bytes": 2147483648,
+    "memory_percent": 0.0,
+    "network_config": {
+      "net0": "e1000=BC:24:11:52:FC:CD,bridge=vmbr1"
+    },
+    "ips": [],
+    "snapshots": []
+  },
+  {
+    "type": "VM",
+    "node": "the-banished",
+    "vmid": 100,
+    "name": "Zeratul",
+    "status": "stopped",
+    "cpu_percent": 0.0,
+    "memory_used_bytes": 0,
+    "memory_max_bytes": 4294967296,
+    "memory_percent": 0.0,
+    "network_config": {
+      "net0": "virtio=BC:24:11:08:66:B0,bridge=vmbr0,firewall=1",
+      "net1": "virtio=BC:24:11:6D:B5:1E,bridge=vmbr1,firewall=1"
+    },
+    "ips": [],
+    "snapshots": []
+  },
+  {
+    "type": "VM",
+    "node": "the-banished",
+    "vmid": 102,
+    "name": "Wazuh-mng",
+    "status": "stopped",
+    "cpu_percent": 0.0,
+    "memory_used_bytes": 0,
+    "memory_max_bytes": 5368709120,
+    "memory_percent": 0.0,
+    "network_config": {
+      "net0": "virtio=BC:24:11:2E:42:2D,bridge=vmbr0,firewall=1"
+    },
+    "ips": [],
+    "snapshots": [
+      {
+        "name": "InitialWZH",
+        "description": "",
+        "snaptime": 1766029276,
+        "parent": null,
+        "status": "active"
+      },
+      {
+        "name": "AfterMC",
+        "description": "",
+        "snaptime": 1766044416,
+        "parent": "InitialWZH",
+        "status": "active"
+      }
+    ]
+  },
+  {
+    "type": "LXC",
+    "node": "the-banished",
+    "vmid": 105,
+    "name": "Tzompantli",
+    "status": "stopped",
+    "cpu_percent": 0.0,
+    "memory_used_bytes": 0,
+    "memory_max_bytes": 536870912,
+    "memory_percent": 0.0,
+    "network_config": {
+      "net1": "name=eth1,bridge=vmbr1,hwaddr=BC:24:11:49:16:AB,ip=10.0.0.10/24,type=veth",
+      "net0": "name=eth0,bridge=vmbr0,gw=192.168.86.1,hwaddr=BC:24:11:77:44:E6,ip=192.168.86.10/24,type=veth"
+    },
+    "ips": [
+      "10.0.0.10",
+      "192.168.86.10"
+    ],
+    "snapshots": []
+  },
+  {
+    "type": "LXC",
+    "node": "the-banished",
+    "vmid": 107,
+    "name": "IT210",
+    "status": "stopped",
+    "cpu_percent": 0.0,
+    "memory_used_bytes": 0,
+    "memory_max_bytes": 1073741824,
+    "memory_percent": 0.0,
+    "network_config": {
+      "net0": "name=eth0,bridge=vmbr0,firewall=1,hwaddr=BC:24:11:DE:F8:77,ip=dhcp,ip6=dhcp,type=veth"
+    },
+    "ips": [],
+    "snapshots": []
+  },
+  {
+    "type": "LXC",
+    "node": "the-banished",
+    "vmid": 104,
+    "name": "jack-o-bridge",
+    "status": "running",
+    "cpu_percent": 0.26,
+    "memory_used_bytes": 143986688,
+    "memory_max_bytes": 1073741824,
+    "memory_percent": 13.41,
+    "network_config": {
+      "net0": "name=eth0,bridge=vmbr0,firewall=1,hwaddr=BC:24:11:94:1E:07,ip=dhcp,type=veth"
+    },
+    "ips": [],
+    "snapshots": []
+  },
+  {
+    "type": "LXC",
+    "node": "the-banished",
+    "vmid": 300,
+    "name": "Jack-os",
+    "status": "running",
+    "cpu_percent": 0.0,
+    "memory_used_bytes": 71548928,
+    "memory_max_bytes": 4294967296,
+    "memory_percent": 1.67,
+    "network_config": {
+      "net0": "name=eth0,bridge=vmbr0,firewall=1,hwaddr=BC:24:11:97:5B:A0,ip=dhcp,ip6=dhcp,type=veth"
+    },
+    "ips": [],
+    "snapshots": []
+  },
+  {
+    "type": "LXC",
+    "node": "the-banished",
+    "vmid": 117,
+    "name": "cortes-brain",
+    "status": "stopped",
+    "cpu_percent": 0.0,
+    "memory_used_bytes": 0,
+    "memory_max_bytes": 2147483648,
+    "memory_percent": 0.0,
+    "network_config": {
+      "net0": "name=eth0,bridge=vmbr0,firewall=1,hwaddr=BC:24:11:89:40:40,ip=dhcp,type=veth"
+    },
+    "ips": [],
+    "snapshots": []
+  },
+  {
+    "type": "LXC",
+    "node": "the-banished",
+    "vmid": 103,
+    "name": "Us",
+    "status": "stopped",
+    "cpu_percent": 0.0,
+    "memory_used_bytes": 0,
+    "memory_max_bytes": 536870912,
+    "memory_percent": 0.0,
+    "network_config": {
+      "net0": "name=eth0,bridge=vmbr0,firewall=1,gw=192.168.86.1,hwaddr=BC:24:11:59:EC:54,ip=192.168.86.199/24,type=veth"
+    },
+    "ips": [
+      "192.168.86.199"
+    ],
+    "snapshots": []
+  },
+  {
+    "type": "LXC",
+    "node": "the-banished",
+    "vmid": 106,
+    "name": "JobIfit",
+    "status": "stopped",
+    "cpu_percent": 0.0,
+    "memory_used_bytes": 0,
+    "memory_max_bytes": 1073741824,
+    "memory_percent": 0.0,
+    "network_config": {
+      "net0": "name=eth0,bridge=vmbr0,firewall=1,hwaddr=BC:24:11:7C:1F:A3,ip=dhcp,type=veth"
+    },
+    "ips": [],
+    "snapshots": []
+  }
+]
