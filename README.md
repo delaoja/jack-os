@@ -1,4 +1,4 @@
-# monitor-ia
+# JACK-OS
 
 Defensive tooling for inventorying and carefully operating QEMU virtual
 machines and LXC containers in Proxmox VE, with optional Gemini and Nmap
