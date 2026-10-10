@@ -2,49 +2,15 @@
   {
     "type": "VM",
     "node": "the-banished",
-    "vmid": 204,
-    "name": "MrRobot",
+    "vmid": 101,
+    "name": "MC-Server",
     "status": "stopped",
     "cpu_percent": 0.0,
     "memory_used_bytes": 0,
-    "memory_max_bytes": 2147483648,
+    "memory_max_bytes": 6442450944,
     "memory_percent": 0.0,
     "network_config": {
-      "net0": "e1000=BC:24:11:E7:FE:21,bridge=vmbr1"
-    },
-    "gpu_configuration": [],
-    "ips": [],
-    "snapshots": []
-  },
-  {
-    "type": "VM",
-    "node": "the-banished",
-    "vmid": 200,
-    "name": "metasploitable2",
-    "status": "stopped",
-    "cpu_percent": 0.0,
-    "memory_used_bytes": 0,
-    "memory_max_bytes": 1073741824,
-    "memory_percent": 0.0,
-    "network_config": {
-      "net0": "e1000=BC:24:11:81:34:F4,bridge=vmbr1"
-    },
-    "gpu_configuration": [],
-    "ips": [],
-    "snapshots": []
-  },
-  {
-    "type": "VM",
-    "node": "the-banished",
-    "vmid": 202,
-    "name": "SolidState",
-    "status": "stopped",
-    "cpu_percent": 0.0,
-    "memory_used_bytes": 0,
-    "memory_max_bytes": 2147483648,
-    "memory_percent": 0.0,
-    "network_config": {
-      "net0": "e1000=BC:24:11:6C:85:66,bridge=vmbr1"
+      "net0": "virtio=BC:24:11:D8:3F:68,bridge=vmbr0,firewall=1"
     },
     "gpu_configuration": [],
     "ips": [],
@@ -70,15 +36,66 @@
   {
     "type": "VM",
     "node": "the-banished",
-    "vmid": 101,
-    "name": "MC-Server",
+    "vmid": 203,
+    "name": "SkyTower",
     "status": "stopped",
     "cpu_percent": 0.0,
     "memory_used_bytes": 0,
-    "memory_max_bytes": 6442450944,
+    "memory_max_bytes": 2147483648,
     "memory_percent": 0.0,
     "network_config": {
-      "net0": "virtio=BC:24:11:D8:3F:68,bridge=vmbr0,firewall=1"
+      "net0": "e1000=BC:24:11:52:FC:CD,bridge=vmbr1"
+    },
+    "gpu_configuration": [],
+    "ips": [],
+    "snapshots": []
+  },
+  {
+    "type": "VM",
+    "node": "the-banished",
+    "vmid": 201,
+    "name": "Zico2",
+    "status": "stopped",
+    "cpu_percent": 0.0,
+    "memory_used_bytes": 0,
+    "memory_max_bytes": 1073741824,
+    "memory_percent": 0.0,
+    "network_config": {
+      "net0": "e1000=BC:24:11:A6:80:20,bridge=vmbr1"
+    },
+    "gpu_configuration": [],
+    "ips": [],
+    "snapshots": []
+  },
+  {
+    "type": "VM",
+    "node": "the-banished",
+    "vmid": 200,
+    "name": "metasploitable2",
+    "status": "stopped",
+    "cpu_percent": 0.0,
+    "memory_used_bytes": 0,
+    "memory_max_bytes": 1073741824,
+    "memory_percent": 0.0,
+    "network_config": {
+      "net0": "e1000=BC:24:11:81:34:F4,bridge=vmbr1"
+    },
+    "gpu_configuration": [],
+    "ips": [],
+    "snapshots": []
+  },
+  {
+    "type": "VM",
+    "node": "the-banished",
+    "vmid": 204,
+    "name": "MrRobot",
+    "status": "stopped",
+    "cpu_percent": 0.0,
+    "memory_used_bytes": 0,
+    "memory_max_bytes": 2147483648,
+    "memory_percent": 0.0,
+    "network_config": {
+      "net0": "e1000=BC:24:11:E7:FE:21,bridge=vmbr1"
     },
     "gpu_configuration": [],
     "ips": [],
@@ -119,6 +136,23 @@
   {
     "type": "VM",
     "node": "the-banished",
+    "vmid": 202,
+    "name": "SolidState",
+    "status": "stopped",
+    "cpu_percent": 0.0,
+    "memory_used_bytes": 0,
+    "memory_max_bytes": 2147483648,
+    "memory_percent": 0.0,
+    "network_config": {
+      "net0": "e1000=BC:24:11:6C:85:66,bridge=vmbr1"
+    },
+    "gpu_configuration": [],
+    "ips": [],
+    "snapshots": []
+  },
+  {
+    "type": "VM",
+    "node": "the-banished",
     "vmid": 100,
     "name": "Zeratul",
     "status": "stopped",
@@ -129,40 +163,6 @@
     "network_config": {
       "net0": "virtio=BC:24:11:08:66:B0,bridge=vmbr0,firewall=1",
       "net1": "virtio=BC:24:11:6D:B5:1E,bridge=vmbr1,firewall=1"
-    },
-    "gpu_configuration": [],
-    "ips": [],
-    "snapshots": []
-  },
-  {
-    "type": "VM",
-    "node": "the-banished",
-    "vmid": 201,
-    "name": "Zico2",
-    "status": "stopped",
-    "cpu_percent": 0.0,
-    "memory_used_bytes": 0,
-    "memory_max_bytes": 1073741824,
-    "memory_percent": 0.0,
-    "network_config": {
-      "net0": "e1000=BC:24:11:A6:80:20,bridge=vmbr1"
-    },
-    "gpu_configuration": [],
-    "ips": [],
-    "snapshots": []
-  },
-  {
-    "type": "VM",
-    "node": "the-banished",
-    "vmid": 203,
-    "name": "SkyTower",
-    "status": "stopped",
-    "cpu_percent": 0.0,
-    "memory_used_bytes": 0,
-    "memory_max_bytes": 2147483648,
-    "memory_percent": 0.0,
-    "network_config": {
-      "net0": "e1000=BC:24:11:52:FC:CD,bridge=vmbr1"
     },
     "gpu_configuration": [],
     "ips": [],
@@ -180,6 +180,57 @@
     "memory_percent": 0.0,
     "network_config": {
       "net0": "name=eth0,bridge=vmbr0,firewall=1,hwaddr=BC:24:11:89:40:40,ip=dhcp,type=veth"
+    },
+    "gpu_configuration": [],
+    "ips": [],
+    "snapshots": []
+  },
+  {
+    "type": "LXC",
+    "node": "the-banished",
+    "vmid": 300,
+    "name": "Jack-os",
+    "status": "stopped",
+    "cpu_percent": 0.0,
+    "memory_used_bytes": 0,
+    "memory_max_bytes": 4294967296,
+    "memory_percent": 0.0,
+    "network_config": {
+      "net0": "name=eth0,bridge=vmbr0,firewall=1,hwaddr=BC:24:11:97:5B:A0,ip=dhcp,ip6=dhcp,type=veth"
+    },
+    "gpu_configuration": [],
+    "ips": [],
+    "snapshots": []
+  },
+  {
+    "type": "LXC",
+    "node": "the-banished",
+    "vmid": 104,
+    "name": "jack-o-bridge",
+    "status": "running",
+    "cpu_percent": 0.22,
+    "memory_used_bytes": 146538496,
+    "memory_max_bytes": 1073741824,
+    "memory_percent": 13.65,
+    "network_config": {
+      "net0": "name=eth0,bridge=vmbr0,firewall=1,hwaddr=BC:24:11:94:1E:07,ip=dhcp,type=veth"
+    },
+    "gpu_configuration": [],
+    "ips": [],
+    "snapshots": []
+  },
+  {
+    "type": "LXC",
+    "node": "the-banished",
+    "vmid": 107,
+    "name": "IT210",
+    "status": "stopped",
+    "cpu_percent": 0.0,
+    "memory_used_bytes": 0,
+    "memory_max_bytes": 1073741824,
+    "memory_percent": 0.0,
+    "network_config": {
+      "net0": "name=eth0,bridge=vmbr0,firewall=1,hwaddr=BC:24:11:DE:F8:77,ip=dhcp,ip6=dhcp,type=veth"
     },
     "gpu_configuration": [],
     "ips": [],
@@ -209,49 +260,15 @@
   {
     "type": "LXC",
     "node": "the-banished",
-    "vmid": 107,
-    "name": "IT210",
+    "vmid": 106,
+    "name": "JobIfit",
     "status": "stopped",
     "cpu_percent": 0.0,
     "memory_used_bytes": 0,
     "memory_max_bytes": 1073741824,
     "memory_percent": 0.0,
     "network_config": {
-      "net0": "name=eth0,bridge=vmbr0,firewall=1,hwaddr=BC:24:11:DE:F8:77,ip=dhcp,ip6=dhcp,type=veth"
-    },
-    "gpu_configuration": [],
-    "ips": [],
-    "snapshots": []
-  },
-  {
-    "type": "LXC",
-    "node": "the-banished",
-    "vmid": 300,
-    "name": "Jack-os",
-    "status": "stopped",
-    "cpu_percent": 0.0,
-    "memory_used_bytes": 0,
-    "memory_max_bytes": 4294967296,
-    "memory_percent": 0.0,
-    "network_config": {
-      "net0": "name=eth0,bridge=vmbr0,firewall=1,hwaddr=BC:24:11:97:5B:A0,ip=dhcp,ip6=dhcp,type=veth"
-    },
-    "gpu_configuration": [],
-    "ips": [],
-    "snapshots": []
-  },
-  {
-    "type": "LXC",
-    "node": "the-banished",
-    "vmid": 104,
-    "name": "jack-o-bridge",
-    "status": "running",
-    "cpu_percent": 0.0,
-    "memory_used_bytes": 146276352,
-    "memory_max_bytes": 1073741824,
-    "memory_percent": 13.62,
-    "network_config": {
-      "net0": "name=eth0,bridge=vmbr0,firewall=1,hwaddr=BC:24:11:94:1E:07,ip=dhcp,type=veth"
+      "net0": "name=eth0,bridge=vmbr0,firewall=1,hwaddr=BC:24:11:7C:1F:A3,ip=dhcp,type=veth"
     },
     "gpu_configuration": [],
     "ips": [],
@@ -274,23 +291,6 @@
     "ips": [
       "192.168.86.199"
     ],
-    "snapshots": []
-  },
-  {
-    "type": "LXC",
-    "node": "the-banished",
-    "vmid": 106,
-    "name": "JobIfit",
-    "status": "stopped",
-    "cpu_percent": 0.0,
-    "memory_used_bytes": 0,
-    "memory_max_bytes": 1073741824,
-    "memory_percent": 0.0,
-    "network_config": {
-      "net0": "name=eth0,bridge=vmbr0,firewall=1,hwaddr=BC:24:11:7C:1F:A3,ip=dhcp,type=veth"
-    },
-    "gpu_configuration": [],
-    "ips": [],
     "snapshots": []
   }
 ]

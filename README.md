@@ -65,8 +65,10 @@ Fill in `.env`:
 
 ```env
 PROXMOX_HOST=https://pve.example.com:8006
-PROXMOX_USER=monitor@pam
-PROXMOX_TOKEN=TOKEN_ID=TOKEN_SECRET
+PROXMOX_PORT=8006
+PROXMOX_USER=monitor@pam!monitor-token
+PROXMOX_TOKEN=TOKEN_SECRET
+PROXMOX_VERIFY_SSL=false
 GOOGLE_API_KEY=SET_ONLY_IF_USING_GEMINI
 GEMINI_MODEL=gemini-2.0-flash
 ```
@@ -78,6 +80,11 @@ TOKEN_ID=SECRET
 user@realm!TOKEN_ID=SECRET
 PVEAPIToken=user@realm!TOKEN_ID=SECRET
 ```
+
+When `PROXMOX_USER` includes the token ID, as in
+`user@realm!TOKEN_ID`, set `PROXMOX_TOKEN` to the token secret only. The
+optional `PROXMOX_PORT` defaults to `8006`, and `PROXMOX_VERIFY_SSL` defaults
+to `false` for self-signed Proxmox certificates.
 
 Never commit `.env`, tokens, passwords, or API keys.
 

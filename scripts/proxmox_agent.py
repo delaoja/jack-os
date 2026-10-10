@@ -18,7 +18,7 @@ import sys
 import time
 from pathlib import Path
 from typing import Any, Callable, TypeVar
-from urllib.parse import quote
+from urllib.parse import quote, urlsplit, urlunsplit
 
 import requests
 import urllib3
@@ -53,11 +53,39 @@ def required_env(name: str) -> str:
     return value
 
 
-def proxmox_base_url(host: str) -> str:
-    """Normalizes a Proxmox host, URL, or API URL."""
+def optional_env(name: str, default: str) -> str:
+    """Return an optional environment variable without exposing its value."""
+    return os.getenv(name, default).strip() or default
+
+
+def env_bool(name: str, default: bool = False) -> bool:
+    """Parse a boolean environment variable with explicit accepted values."""
+    value = os.getenv(name)
+    if value is None or not value.strip():
+        return default
+    normalized = value.strip().lower()
+    if normalized in {"1", "true", "yes", "on"}:
+        return True
+    if normalized in {"0", "false", "no", "off"}:
+        return False
+    raise ValueError(f"{name} must be true/false, yes/no, or 1/0")
+
+
+def proxmox_base_url(host: str, port: str = "8006") -> str:
+    """Normalize a Proxmox host or URL and append the configured API path."""
     normalized = host.strip().rstrip("/")
     if not normalized.startswith(("http://", "https://")):
-        normalized = f"https://{normalized}:8006"
+        normalized = f"https://{normalized}:{port}"
+    else:
+        parsed = urlsplit(normalized)
+        if parsed.port is None and port:
+            hostname = parsed.hostname or ""
+            if ":" in hostname and not hostname.startswith("["):
+                hostname = f"[{hostname}]"
+            netloc = f"{hostname}:{port}"
+            normalized = urlunsplit(
+                (parsed.scheme, netloc, parsed.path, parsed.query, parsed.fragment)
+            ).rstrip("/")
     for suffix in ("/api2/json", "/api2/extjs", "/api2/html"):
         if normalized.endswith(suffix):
             normalized = normalized[: -len(suffix)]
@@ -66,19 +94,38 @@ def proxmox_base_url(host: str) -> str:
 
 
 def proxmox_auth_header(user: str, token: str) -> str:
-    """Accepts TOKEN_ID=SECRET, user!TOKEN_ID=SECRET, or a complete header."""
+    """Build a PVE API token header from supported environment formats.
+
+    PROXMOX_USER may be either ``user@realm`` or
+    ``user@realm!token-id``. In the latter form, PROXMOX_TOKEN contains only
+    the token secret, matching the format used by the project environment.
+    """
+    normalized_user = user.strip()
     normalized = token.strip()
     if normalized.startswith("PVEAPIToken="):
         normalized = normalized[len("PVEAPIToken=") :]
 
+    if "!" in normalized_user:
+        token_user, token_id = normalized_user.split("!", 1)
+        if not token_user or not token_id:
+            raise ValueError("PROXMOX_USER must use user@realm or user@realm!token-id.")
+        if "!" in normalized:
+            embedded_user, token_value = normalized.split("!", 1)
+            if embedded_user != token_user:
+                raise ValueError(
+                    "PROXMOX_TOKEN contains a user different from PROXMOX_USER."
+                )
+            return f"PVEAPIToken={embedded_user}!{token_value}"
+        return f"PVEAPIToken={token_user}!{token_id}={normalized}"
+
     if "!" in normalized:
         token_user, token_value = normalized.split("!", 1)
-        if token_user != user:
+        if token_user != normalized_user:
             raise ValueError(
                 "PROXMOX_TOKEN contains a user different from PROXMOX_USER."
             )
         return f"PVEAPIToken={token_user}!{token_value}"
-    return f"PVEAPIToken={user}!{normalized}"
+    return f"PVEAPIToken={normalized_user}!{normalized}"
 
 
 def percent(value: Any) -> float | None:
@@ -122,10 +169,12 @@ def is_public_ip(address: ipaddress.IPv4Address | ipaddress.IPv6Address) -> bool
 class ProxmoxClient:
     """Read-only client for the endpoints used by the scanner."""
 
-    def __init__(self, host: str, user: str, token: str) -> None:
-        self.base_url = proxmox_base_url(host)
+    def __init__(
+        self, host: str, user: str, token: str, port: str = "8006", verify_ssl: bool = False
+    ) -> None:
+        self.base_url = proxmox_base_url(host, port)
         self.session = requests.Session()
-        self.session.verify = False
+        self.session.verify = verify_ssl
         self.session.headers.update(
             {
                 "Accept": "application/json",
@@ -150,6 +199,14 @@ class ProxmoxClient:
             message = f"HTTP {status} consultando Proxmox ({path})"
             if status == 401:
                 message += "; revisa PROXMOX_USER y PROXMOX_TOKEN"
+            if exc.response is not None:
+                try:
+                    error_payload = exc.response.json()
+                    detail = error_payload.get("errors") or error_payload.get("message")
+                    if detail:
+                        message += f": {detail}"
+                except ValueError:
+                    pass
             if optional:
                 raise OptionalEndpointError(message) from exc
             raise ProxmoxAPIError(message) from exc
@@ -1017,6 +1074,8 @@ def main(argv: list[str] | None = None) -> int:
             required_env("PROXMOX_HOST"),
             required_env("PROXMOX_USER"),
             required_env("PROXMOX_TOKEN"),
+            optional_env("PROXMOX_PORT", "8006"),
+            env_bool("PROXMOX_VERIFY_SSL", False),
         )
         LOGGER.info("Querying Proxmox VE inventory...")
         inventory = client.inventory()
