@@ -1,4 +1,4 @@
-"""Punto de entrada compatible para el escáner de Proxmox."""
+"""Compatible entry point for the Proxmox scanner."""
 
 from scripts.proxmox_agent import main
 
