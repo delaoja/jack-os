@@ -1,0 +1,322 @@
+<!DOCTYPE html>
+<html lang="en" class="dark">
+<head>
+  <meta charset="UTF-8">
+  <title>Jack-OS // Proxmox V2.0 Core</title>
+  <script src="https://cdn.tailwindcss.com"></script>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=JetBrains+Mono:wght@400;600&display=swap" rel="stylesheet">
+  <style>
+    body { font-family: 'Inter', sans-serif; }
+    .mono { font-family: 'JetBrains Mono', monospace; }
+  </style>
+</head>
+<body class="bg-slate-950 text-slate-100 flex flex-col h-screen overflow-hidden selection:bg-purple-900 selection:text-white">
+
+  <!-- Top Bar -->
+  <header class="h-14 border-b border-slate-800 bg-slate-900/60 px-6 flex items-center justify-between flex-shrink-0">
+    <div class="flex items-center gap-3">
+      <div class="w-3 h-3 rounded-full bg-emerald-500 animate-pulse"></div>
+      <span class="font-bold tracking-tight text-lg">JACK-OS <span class="text-xs text-slate-400 font-normal">v2.0 // TACTICAL BRIDGE</span></span>
+    </div>
+    <div class="flex items-center gap-4 text-xs mono">
+      <span class="text-slate-400">NODE: <strong class="text-slate-200">THE-BANISHED</strong></span>
+      <span class="px-2 py-0.5 rounded bg-emerald-950 text-emerald-400 border border-emerald-800">ONLINE</span>
+      <span class="text-slate-500" id="clock">00:00:00 UTC</span>
+    </div>
+  </header>
+
+  <div class="flex flex-1 overflow-hidden">
+    <!-- Sidebar Navigation -->
+    <aside class="w-64 border-r border-slate-800 bg-slate-900/30 flex flex-col justify-between p-4 flex-shrink-0">
+      <nav class="space-y-1.5">
+        <button onclick="switchTab('tab-telemetry')" id="nav-telemetry" class="w-full flex items-center gap-3 px-3 py-2.5 rounded-lg text-sm font-medium bg-slate-800 text-slate-100 border border-slate-700 transition">
+          <svg class="w-4 h-4 text-emerald-400" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z"/></svg>
+          Node Telemetry
+        </button>
+        <button onclick="switchTab('tab-resources')" id="nav-resources" class="w-full flex items-center gap-3 px-3 py-2.5 rounded-lg text-sm font-medium text-slate-400 hover:bg-slate-800/60 hover:text-slate-200 transition">
+          <svg class="w-4 h-4 text-blue-400" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 12h14M5 12a2 2 0 01-2-2V6a2 2 0 012-2h14a2 2 0 012 2v4a2 2 0 01-2 2M5 12a2 2 0 00-2 2v4a2 2 0 002 2h14a2 2 0 002-2v-4a2 2 0 00-2-2m-2-4h.01M17 16h.01"/></svg>
+          VMs & LXCs
+        </button>
+        <button onclick="switchTab('tab-ai')" id="nav-ai" class="w-full flex items-center gap-3 px-3 py-2.5 rounded-lg text-sm font-medium text-slate-400 hover:bg-slate-800/60 hover:text-slate-200 transition">
+          <svg class="w-4 h-4 text-purple-400" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 10h.01M12 10h.01M16 10h.01M9 16H5a2 2 0 01-2-2V6a2 2 0 012-2h14a2 2 0 012 2v8a2 2 0 01-2 2h-5l-5 5v-5z"/></svg>
+          AI Operations Terminal
+        </button>
+      </nav>
+      <div class="p-3 bg-slate-900/60 border border-slate-800/80 rounded-lg text-[11px] text-slate-400 mono space-y-1">
+        <div class="text-slate-300 font-semibold">INFRASTRUCTURE</div>
+        <div>Core: Proxmox VE</div>
+        <div>Network: Tailscale P2P</div>
+        <div>Copilot: Jack // Gemini</div>
+      </div>
+    </aside>
+
+    <!-- Main Workspace -->
+    <main class="flex-1 overflow-y-auto p-6 bg-slate-950">
+
+      <!-- TAB 1: NODE TELEMETRY -->
+      <section id="tab-telemetry" class="space-y-6">
+        <div>
+          <h1 class="text-xl font-bold text-slate-100">Hypervisor Status</h1>
+          <p class="text-xs text-slate-400">Real-time telemetry from The-Banished</p>
+        </div>
+
+        <div class="grid grid-cols-1 md:grid-cols-4 gap-4">
+          <!-- CPU Card -->
+          <div class="bg-slate-900/90 border border-slate-800 p-5 rounded-xl">
+            <span class="text-xs text-slate-400 font-medium">CPU Usage</span>
+            <div class="text-3xl font-bold mono mt-2 text-emerald-400" id="cpu-pct">--%</div>
+            <div class="text-xs text-slate-500 mt-1" id="cpu-cores">8 Logical Threads</div>
+          </div>
+          <!-- RAM Card -->
+          <div class="bg-slate-900/90 border border-slate-800 p-5 rounded-xl">
+            <span class="text-xs text-slate-400 font-medium">RAM</span>
+            <div class="text-3xl font-bold mono mt-2 text-emerald-400" id="ram-pct">--%</div>
+            <div class="text-xs text-slate-500 mt-1" id="ram-usage">-- / -- MB</div>
+          </div>
+          <!-- Storage Card -->
+          <div class="bg-slate-900/90 border border-slate-800 p-5 rounded-xl">
+            <span class="text-xs text-slate-400 font-medium">Storage (rootfs)</span>
+            <div class="text-3xl font-bold mono mt-2 text-blue-400" id="storage-pct">--%</div>
+            <div class="text-xs text-slate-500 mt-1" id="storage-usage">-- / -- GB</div>
+          </div>
+          <!-- Network Card -->
+          <div class="bg-slate-900/90 border border-slate-800 p-5 rounded-xl">
+            <span class="text-xs text-slate-400 font-medium">Network (Throughput)</span>
+            <div class="text-3xl font-bold mono mt-2 text-purple-400" id="net-rx">0.0 KB/s</div>
+            <div class="text-xs text-slate-500 mt-1" id="net-tx">TX: 0.0 KB/s</div>
+          </div>
+        </div>
+      </section>
+
+      <!-- TAB 2: VIRTUAL MACHINES AND SERVICES -->
+      <section id="tab-resources" class="hidden space-y-5">
+        <div class="flex items-center justify-between">
+          <div>
+            <h1 class="text-xl font-bold text-slate-100">Virtual Machines & Containers</h1>
+            <p class="text-xs text-slate-400">Instances hosted on node The-Banished</p>
+          </div>
+          <div class="flex items-center gap-2">
+            <button onclick="loadResources()" class="px-3 py-1.5 bg-slate-800 hover:bg-slate-700 text-xs font-medium rounded-lg border border-slate-700 flex items-center gap-1.5">
+              <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15"/></svg>
+              Refresh
+            </button>
+          </div>
+        </div>
+
+        <div class="bg-slate-900/90 border border-slate-800 rounded-xl overflow-hidden shadow-sm">
+          <table class="w-full text-left text-sm">
+            <thead class="bg-slate-800/60 text-slate-400 text-xs uppercase mono border-b border-slate-800">
+              <tr>
+                <th class="px-5 py-3">VMID</th>
+                <th class="px-5 py-3">Name</th>
+                <th class="px-5 py-3">Type</th>
+                <th class="px-5 py-3">Status</th>
+                <th class="px-5 py-3">CPU</th>
+                <th class="px-5 py-3">Memory</th>
+                <th class="px-5 py-3">IPs</th>
+                <th class="px-5 py-3 text-right">Actions</th>
+              </tr>
+            </thead>
+            <tbody id="resources-body" class="divide-y divide-slate-800 text-slate-300">
+              <tr>
+                <td colspan="8" class="text-center py-8 text-slate-500">Loading cluster resources...</td>
+              </tr>
+            </tbody>
+          </table>
+        </div>
+      </section>
+
+      <!-- TAB 3: AI TERMINAL / CHAT -->
+      <section id="tab-ai" class="hidden h-full flex flex-col space-y-4">
+        <div>
+          <h1 class="text-xl font-bold text-slate-100">AI Operations Terminal // Gemini Copilot</h1>
+          <p class="text-xs text-slate-400">Natural-language interaction powered by live telemetry and inventory</p>
+        </div>
+
+        <!-- Chat Container -->
+        <div id="chat-box" class="flex-1 bg-slate-900/90 border border-slate-800 rounded-xl p-4 overflow-y-auto space-y-3 mono text-xs">
+          <div class="p-3 bg-slate-800/50 rounded-lg text-slate-300">
+            <strong class="text-purple-400">Jack (AI Copilot):</strong> Link active with The-Banished. I have direct access to telemetry and the hypervisor's 16 instances. What task or diagnostic should we run?
+          </div>
+        </div>
+
+        <!-- Command Input -->
+        <form onsubmit="handleSendAI(event)" class="flex gap-2 flex-shrink-0">
+          <input type="text" id="ai-input" placeholder="e.g., Which machines are running? or Diagnose Wazuh's status..." class="flex-1 bg-slate-900 border border-slate-800 rounded-xl px-4 py-3 text-sm focus:outline-none focus:border-purple-500 mono" required />
+          <button type="submit" class="px-6 py-3 bg-purple-600 hover:bg-purple-500 font-semibold rounded-xl text-sm transition">Send</button>
+        </form>
+      </section>
+
+    </main>
+  </div>
+
+  <script>
+    let currentResources = [];
+
+    // Tab Switching Logic
+    function switchTab(tabId) {
+      ['tab-telemetry', 'tab-resources', 'tab-ai'].forEach(id => {
+        document.getElementById(id).classList.add('hidden');
+        const navBtn = document.getElementById('nav-' + id.replace('tab-', ''));
+        if (navBtn) {
+          navBtn.className = 'w-full flex items-center gap-3 px-3 py-2.5 rounded-lg text-sm font-medium text-slate-400 hover:bg-slate-800/60 hover:text-slate-200 transition';
+        }
+      });
+      document.getElementById(tabId).classList.remove('hidden');
+      const activeNav = document.getElementById('nav-' + tabId.replace('tab-', ''));
+      if (activeNav) {
+        activeNav.className = 'w-full flex items-center gap-3 px-3 py-2.5 rounded-lg text-sm font-medium bg-slate-800 text-slate-100 border border-slate-700 transition';
+      }
+
+      if (tabId === 'tab-resources') loadResources();
+    }
+
+    // Telemetry Polling (Tab 1)
+    async function updateTelemetry() {
+      try {
+        const res = await fetch('/telemetry');
+        if (!res.ok) return;
+        const data = await res.json();
+        document.getElementById('cpu-pct').innerText = `${data.cpu.percent}%`;
+        document.getElementById('cpu-cores').innerText = `${data.cpu.logical_cores || 8} Logical Threads`;
+        document.getElementById('ram-pct').innerText = `${data.memory.percent}%`;
+        document.getElementById('ram-usage').innerText = `${data.memory.used_mb} / ${data.memory.total_mb} MB`;
+        document.getElementById('storage-pct').innerText = `${data.disk.percent}%`;
+        document.getElementById('storage-usage').innerText = `${data.disk.used_gb} / ${data.disk.total_gb} GB`;
+        document.getElementById('net-rx').innerText = `${data.network.rx_rate_kb_s} KB/s`;
+        document.getElementById('net-tx').innerText = `TX: ${data.network.tx_rate_kb_s} KB/s`;
+      } catch (e) {
+        console.error("Telemetry error", e);
+      }
+    }
+    setInterval(updateTelemetry, 2500);
+    updateTelemetry();
+
+    // Helper: Format bytes to MB/GB
+    function formatBytes(bytes) {
+      if (!bytes || bytes === 0) return '0 MB';
+      const mb = bytes / (1024 * 1024);
+      if (mb >= 1024) return (mb / 1024).toFixed(1) + ' GB';
+      return mb.toFixed(0) + ' MB';
+    }
+
+    // Load Proxmox Live Resources (Tab 2)
+    async function loadResources() {
+      const tbody = document.getElementById('resources-body');
+      try {
+        const res = await fetch('/proxmox/resources');
+        const data = await res.json();
+        currentResources = Array.isArray(data) ? data : [];
+
+        if (currentResources.length === 0) {
+          tbody.innerHTML = `<tr><td colspan="8" class="text-center py-8 text-slate-500">No instances found in the cluster.</td></tr>`;
+          return;
+        }
+
+        tbody.innerHTML = currentResources.map(item => {
+          const isRunning = item.status === 'running';
+          const maxMem = formatBytes(item.memory_max_bytes);
+          const usedMem = formatBytes(item.memory_used_bytes);
+          const memStr = isRunning ? `${usedMem} / ${maxMem}` : maxMem;
+          const ipList = (item.ips && item.ips.length > 0) ? item.ips.join(', ') : '-';
+
+          return `
+            <tr class="hover:bg-slate-800/40 transition">
+              <td class="px-5 py-3.5 mono text-slate-400 font-medium">${item.vmid}</td>
+              <td class="px-5 py-3.5 font-semibold text-slate-200">${item.name}</td>
+              <td class="px-5 py-3.5 mono uppercase text-xs">
+                <span class="px-2 py-0.5 rounded ${item.type === 'VM' ? 'bg-indigo-950 text-indigo-400 border border-indigo-800' : 'bg-cyan-950 text-cyan-400 border border-cyan-800'}">
+                  ${item.type}
+                </span>
+              </td>
+              <td class="px-5 py-3.5">
+                <span class="px-2 py-0.5 rounded text-xs mono ${isRunning ? 'bg-emerald-950 text-emerald-400 border border-emerald-800' : 'bg-slate-800 text-slate-400 border border-slate-700'}">
+                  ${item.status}
+                </span>
+              </td>
+              <td class="px-5 py-3.5 mono text-xs">${isRunning ? `${item.cpu_percent || 0}%` : '-'}</td>
+              <td class="px-5 py-3.5 mono text-xs">${memStr}</td>
+              <td class="px-5 py-3.5 mono text-xs text-slate-400">${ipList}</td>
+              <td class="px-5 py-3.5 text-right">
+                ${isRunning ? 
+                  `<button onclick="triggerPowerAction(${item.vmid}, 'shutdown')" class="px-2.5 py-1 bg-rose-950/80 hover:bg-rose-900 text-rose-300 text-xs rounded border border-rose-800 mono transition">STOP</button>` : 
+                  `<button onclick="triggerPowerAction(${item.vmid}, 'start')" class="px-2.5 py-1 bg-emerald-950/80 hover:bg-emerald-900 text-emerald-300 text-xs rounded border border-emerald-800 mono transition">START</button>`
+                }
+              </td>
+            </tr>
+          `;
+        }).join('');
+      } catch (e) {
+        tbody.innerHTML = `<tr><td colspan="8" class="text-center py-8 text-rose-400">Error retrieving the Proxmox inventory.</td></tr>`;
+      }
+    }
+
+    // Trigger Power Actions (START / STOP)
+    async function triggerPowerAction(vmid, action) {
+      if (!confirm(`Confirm tactical command: ${action.toUpperCase()} for VMID ${vmid}?`)) return;
+      try {
+        const res = await fetch('/proxmox/power', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ vmid: vmid, action: action })
+        });
+        const data = await res.json();
+        alert(data.message || `Action sent successfully.`);
+        setTimeout(loadResources, 2000);
+      } catch (e) {
+        alert(`Error dispatching action: ${e}`);
+      }
+    }
+
+    // AI Chat Submission (Tab 3)
+    async function handleSendAI(e) {
+      e.preventDefault();
+      const input = document.getElementById('ai-input');
+      const box = document.getElementById('chat-box');
+      const msg = input.value.trim();
+      if (!msg) return;
+
+      input.value = '';
+      box.innerHTML += `
+        <div class="p-3 bg-purple-950/30 border border-purple-800/50 rounded-lg text-slate-200">
+          <strong class="text-purple-300">Andrei:</strong> ${msg}
+        </div>
+      `;
+      box.scrollTop = box.scrollHeight;
+
+      try {
+        const res = await fetch('/ai/chat', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ message: msg })
+        });
+        const data = await res.json();
+        
+        let actionBadge = '';
+        if (data.suggested_action) {
+          actionBadge = `
+            <div class="mt-2 p-2 bg-black/60 rounded border border-slate-800 text-emerald-400 mono text-[11px]">
+              # Proposed action / command:<br><code>${data.suggested_action}</code>
+            </div>
+          `;
+        }
+
+        box.innerHTML += `
+          <div class="p-3 bg-slate-800/50 border border-slate-700/60 rounded-lg text-slate-300 space-y-1.5">
+            <div><strong class="text-purple-400">Jack (AI Copilot):</strong> ${data.reply}</div>
+            ${actionBadge}
+          </div>
+        `;
+        box.scrollTop = box.scrollHeight;
+      } catch (e) {
+        box.innerHTML += `<div class="p-2 text-rose-400">Error connecting to the AI bridge.</div>`;
+      }
+    }
+
+    // Clock Tick
+    setInterval(() => {
+      document.getElementById('clock').innerText = new Date().toUTCString().split(' ')[4] + ' UTC';
+    }, 1000);
+  </script>
+</body>
+</html>
