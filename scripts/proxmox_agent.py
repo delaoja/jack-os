@@ -912,8 +912,13 @@ def interactive_interface(
             else:
                 print("No single resource was found for that VMID.")
         elif option == "3":
-            current = client.inventory()
-            print(f"Inventory refreshed: {len(current)} resources.")
+            try:
+                current = client.inventory()
+            except ProxmoxAPIError as exc:
+                print(f"Inventory refresh failed: {exc}")
+            else:
+                save_inventory(current, output)
+                print(f"Inventory refreshed: {len(current)} resources.")
         elif option == "4":
             _create_vm(client, execute)
         elif option == "5":
@@ -1077,13 +1082,30 @@ def main(argv: list[str] | None = None) -> int:
             optional_env("PROXMOX_PORT", "8006"),
             env_bool("PROXMOX_VERIFY_SSL", False),
         )
+        if args.execute and not args.interactive:
+            raise ValueError("--execute requires --interactive.")
+
         LOGGER.info("Querying Proxmox VE inventory...")
-        inventory = client.inventory()
-        save_inventory(inventory, args.output)
+        try:
+            inventory = client.inventory()
+        except ProxmoxAPIError as exc:
+            if not args.interactive:
+                raise
+            inventory = []
+            LOGGER.error("Initial inventory query failed: %s", exc)
+            print("\nThe interactive menu is available, but the inventory could not be loaded.")
+            print("Use option 3 to retry after correcting the Proxmox credentials or permissions.")
+        else:
+            save_inventory(inventory, args.output)
+            vm_count = sum(item["type"] == "VM" for item in inventory)
+            lxc_count = sum(item["type"] == "LXC" for item in inventory)
+            print(f"Resources found: {len(inventory)} (VMs: {vm_count}, LXC: {lxc_count})")
+
+        if args.interactive:
+            interactive_interface(client, inventory, args.output, args.execute)
+            return 0
+
         discovered = [ip for item in inventory for ip in item["ips"]]
-        vm_count = sum(item["type"] == "VM" for item in inventory)
-        lxc_count = sum(item["type"] == "LXC" for item in inventory)
-        print(f"Resources found: {len(inventory)} (VMs: {vm_count}, LXC: {lxc_count})")
 
         if args.nmap:
             nmap_scan(discovered + args.target, args.allow_public)
@@ -1097,10 +1119,6 @@ def main(argv: list[str] | None = None) -> int:
                 print(ai_report(inventory, api_key))
             if args.chat:
                 chat(inventory, api_key)
-        if args.execute and not args.interactive:
-            raise ValueError("--execute requiere --interactive.")
-        if args.interactive:
-            interactive_interface(client, inventory, args.output, args.execute)
         return 0
     except (ValueError, ProxmoxAPIError, RuntimeError, OSError) as exc:
         LOGGER.error("%s", exc)
