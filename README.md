@@ -1,95 +1,91 @@
 # JACK-OS
 
-JACK-OS es una plataforma de observabilidad y operación para entornos
-Proxmox VE. Su objetivo es reunir en una sola interfaz la telemetría del
-servidor, el inventario de máquinas virtuales y contenedores, y el apoyo de
-una IA para diagnóstico operativo. El proyecto incluye una API FastAPI, un
-dashboard web y un cliente Python para consultar Proxmox. La IA analiza
-telemetría e inventario y devuelve recomendaciones; no debe considerarse un
-sustituto de la revisión del operador. Las acciones de energía disponibles en
-la API pueden iniciar o apagar recursos y, por eso, deben protegerse antes de
-exponer el servicio fuera de una red de administración. Esta rama incluye
-telemetría en tiempo real, inventario QEMU/LXC, chat operativo y simulación de
-remediación. El monitoreo autónomo basado en setpoints, promedios históricos,
-allowlist y periodo de gracia todavía no está implementado en `FinalBranch`.
+JACK-OS is an observability and operations platform for Proxmox VE
+environments. It combines a FastAPI service, a web dashboard, a Proxmox
+inventory client, system telemetry, and optional Gemini-assisted diagnostics.
+Operators can review node metrics, inspect QEMU virtual machines and LXC
+containers, and request operational analysis from a single interface. The AI
+provides recommendations; it is not an authorization mechanism and does not
+replace operator review. The current branch also exposes power lifecycle
+operations, which must remain restricted to trusted administrators. Autonomous
+setpoints, persistent rolling averages, resource allowlists, grace periods,
+and automatic shutdown policy are not implemented in `FinalBranch`.
 
-## Índice
+## Contents
 
-- [Qué incluye](#qué-incluye)
-- [Arquitectura en una vista](#arquitectura-en-una-vista)
-- [Requisitos](#requisitos)
-- [Instalación](#instalación)
-- [Configuración](#configuración)
-- [Ejecución](#ejecución)
-- [Uso del dashboard](#uso-del-dashboard)
-- [API disponible](#api-disponible)
-- [Cliente de Proxmox](#cliente-de-proxmox)
-- [Seguridad y límites](#seguridad-y-límites)
-- [Verificación](#verificación)
-- [Documentación adicional](#documentación-adicional)
-- [Estructura del proyecto](#estructura-del-proyecto)
-- [Estado actual y próximos pasos](#estado-actual-y-próximos-pasos)
+- [Capabilities](#capabilities)
+- [Architecture](#architecture)
+- [Requirements](#requirements)
+- [Installation](#installation)
+- [Configuration](#configuration)
+- [Running JACK-OS](#running-jack-os)
+- [Using the dashboard](#using-the-dashboard)
+- [API reference](#api-reference)
+- [Proxmox client](#proxmox-client)
+- [Security](#security)
+- [Verification](#verification)
+- [Documentation](#documentation)
+- [Project structure](#project-structure)
+- [Current status and next steps](#current-status-and-next-steps)
 
-## Qué incluye
+## Capabilities
 
-### Para personal no técnico
+### For operators and non-technical users
 
-- Una pantalla web para observar CPU, memoria, disco y red.
-- Visualización de las VMs y contenedores registrados en Proxmox.
-- Consulta del estado de procesos del sistema.
-- Un espacio de conversación con la IA para pedir explicaciones y
-  recomendaciones.
-- Acciones de inicio y apagado visibles desde la pantalla de recursos.
+- View CPU, memory, disk, and network telemetry in a web dashboard.
+- Review the VMs and containers registered in Proxmox.
+- Check whether a local process is running.
+- Ask the AI copilot to explain current conditions and suggest diagnostics.
+- Start or shut down a resource after confirming its VMID and impact.
 
-### Para personal técnico
+### For technical users
 
-- API HTTP basada en FastAPI y contratos Pydantic.
-- Telemetría obtenida del estado del nodo Proxmox.
-- Fallback automático a `psutil` si Proxmox no responde o no hay token.
-- Inventario normalizado de QEMU y LXC.
-- Cliente Proxmox reutilizado por API y herramienta de consola.
-- Integración opcional con Gemini mediante `google-genai`.
-- Endpoint de remediación en modo simulación.
-- Dashboard estático servido por la propia aplicación.
+- FastAPI application with Pydantic request and response models.
+- Telemetry from the Proxmox node status API.
+- Automatic `psutil` fallback when Proxmox telemetry is unavailable.
+- Normalized inventory for QEMU VMs and LXC containers.
+- Shared Proxmox client for the API and command-line workflows.
+- Optional Gemini integration through `google-genai`.
+- Dry-run remediation endpoint for testing diagnostic workflows.
+- Static dashboard served by the FastAPI application.
 
-## Arquitectura en una vista
+## Architecture
 
 ```text
-Navegador
-    |
-    v
+Browser
+   |
+   v
 FastAPI (app/main.py)
-    |
-    +--> /telemetry ----------> TelemetryCollector
-    |                              |
-    |                              +--> Proxmox VE
-    |                              +--> psutil (fallback local)
-    |
-    +--> /proxmox/resources --> ProxmoxClient --> Proxmox VE
-    |
-    +--> /ai/chat ------------> AIDiagnosticEngine --> Gemini
-    |
-    +--> /remediate/dry-run --> AIDiagnosticEngine
-    |
-    +--> /proxmox/power ------> ProxmoxClient --> Proxmox VE
+   |
+   +--> /telemetry ----------> TelemetryCollector
+   |                              |
+   |                              +--> Proxmox VE
+   |                              +--> psutil fallback
+   |
+   +--> /proxmox/resources --> ProxmoxClient --> Proxmox VE
+   |
+   +--> /ai/chat ------------> AIDiagnosticEngine --> Gemini
+   |
+   +--> /remediate/dry-run --> AIDiagnosticEngine
+   |
+   +--> /proxmox/power ------> ProxmoxClient --> Proxmox VE
 ```
 
-La aplicación se inicia en `127.0.0.1:8080` por defecto y sirve el dashboard
-en `/`. La documentación de cada componente está en
-[docs/ARCHITECTURE.md](D:/monitor-ia/jack-os/docs/ARCHITECTURE.md).
+By default, the application listens on `127.0.0.1:8080` and serves the
+dashboard at `/`. See [docs/ARCHITECTURE.md](docs/ARCHITECTURE.md) for the
+component and data-flow description.
 
-## Requisitos
+## Requirements
 
-- Windows, Linux o macOS.
-- Python 3.10 o posterior.
-- Acceso de red al API HTTPS de Proxmox VE.
-- Un usuario o token de Proxmox con permisos mínimos de lectura.
-- `GOOGLE_API_KEY` solamente si se desea usar el diagnóstico de Gemini.
-- Nmap no es requerido por la aplicación de `FinalBranch`.
+- Python 3.10 or later.
+- Network access to the Proxmox VE HTTPS API.
+- A Proxmox user or API token with the minimum required permissions.
+- `GOOGLE_API_KEY` only when Gemini diagnostics are needed.
+- Nmap is not required by the application in `FinalBranch`.
 
-## Instalación
+## Installation
 
-Desde la raíz del proyecto:
+From the repository root:
 
 ```powershell
 python -m venv .venv
@@ -98,7 +94,7 @@ python -m pip install --upgrade pip
 python -m pip install -r .\requirements.txt
 ```
 
-En Linux/macOS:
+On Linux or macOS:
 
 ```bash
 python3 -m venv .venv
@@ -107,108 +103,111 @@ python -m pip install --upgrade pip
 python -m pip install -r requirements.txt
 ```
 
-Usa [.env.example](D:/monitor-ia/jack-os/.env.example) como plantilla y crea
-el archivo local `.env`. Nunca copies secretos reales al README, a la
-documentación ni al repositorio.
+Create a local configuration file from
+[.env.example](.env.example):
 
-## Configuración
+```powershell
+Copy-Item .env.example .env
+notepad .env
+```
 
-Variables principales:
+Do not copy real credentials into the README, documentation, source code, or
+commits.
 
-| Variable | Obligatoria | Descripción |
+## Configuration
+
+| Variable | Required | Description |
 |---|---:|---|
-| `HOST` | No | Dirección de escucha de la API. Por defecto `127.0.0.1`. |
-| `PORT` | No | Puerto HTTP. Por defecto `8080`. |
-| `DEBUG` | No | Activa el modo debug si es `true`, `1`, `yes` u `on`. |
-| `NODE_ID` | No | Identificador usado por la telemetría local. |
-| `PROXMOX_HOST` | Sí para Proxmox | Host o dirección del servidor Proxmox. |
-| `PROXMOX_PORT` | No | Puerto de Proxmox. Por defecto `8006`. |
-| `PROXMOX_USER` | Sí para Proxmox | Usuario/token ID de Proxmox. |
-| `PROXMOX_TOKEN` | Sí para Proxmox | Secreto del token. |
-| `PROXMOX_NODE` | No | Nodo consultado por la telemetría. |
-| `PROXMOX_VERIFY_SSL` | No | Verifica el certificado HTTPS. Se recomienda `true` en producción. |
-| `GOOGLE_API_KEY` | Solo IA | Clave de Google Gemini. |
-| `GEMINI_MODEL` | No | Modelo Gemini; por defecto `gemini-3.6-flash`. |
+| `HOST` | No | API bind address. Defaults to `127.0.0.1`. |
+| `PORT` | No | HTTP port. Defaults to `8080`. |
+| `DEBUG` | No | Enables debug mode for `true`, `1`, `yes`, or `on`. |
+| `NODE_ID` | No | Identifier used by local fallback telemetry. |
+| `PROXMOX_HOST` | For Proxmox | Proxmox host or URL. |
+| `PROXMOX_PORT` | No | Proxmox API port. Defaults to `8006`. |
+| `PROXMOX_USER` | For Proxmox | Proxmox user or token ID. |
+| `PROXMOX_TOKEN` | For Proxmox | Proxmox API token secret. |
+| `PROXMOX_NODE` | No | Node used for telemetry. |
+| `PROXMOX_VERIFY_SSL` | No | Verifies the HTTPS certificate. Use `true` in production. |
+| `GOOGLE_API_KEY` | For AI | Google Gemini API key. |
+| `GEMINI_MODEL` | No | Gemini model name. Defaults to `gemini-3.6-flash`. |
 
-En PowerShell, las variables temporales se escriben así:
+For a temporary PowerShell configuration, use:
 
 ```powershell
 $env:PROXMOX_HOST = "https://pve.example.com"
 $env:PROXMOX_USER = "monitor@pam!monitor-token"
-$env:PROXMOX_TOKEN = "TOKEN_SECRET"
+$env:PROXMOX_TOKEN = "REPLACE_WITH_TOKEN_SECRET"
 ```
 
-Para configuración persistente, escribe las variables en `.env`; no las
-ejecutes como comandos de PowerShell.
+For persistent configuration, put the values in `.env`. Do not enter
+`NAME=value` lines directly as PowerShell commands.
 
-## Ejecución
+## Running JACK-OS
 
-### Dashboard y API
+### Start the API and dashboard
 
 ```powershell
 python -m uvicorn app.main:app --host 127.0.0.1 --port 8080
 ```
 
-También es posible ejecutar:
+You can also run:
 
 ```powershell
 python .\app\main.py
 ```
 
-Abre en el navegador:
+Open the dashboard at:
 
 ```text
 http://127.0.0.1:8080/
 ```
 
-Documentación interactiva de FastAPI:
+FastAPI documentation is available at:
 
 ```text
 http://127.0.0.1:8080/docs
 http://127.0.0.1:8080/redoc
 ```
 
-### Cliente de inventario
+### Run the Proxmox inventory client
 
 ```powershell
 python .\scripts\proxmox_agent.py
 ```
 
-El cliente de consola está orientado a inventario y operaciones de Proxmox.
-Consulta [docs/OPERATIONS.md](D:/monitor-ia/jack-os/docs/OPERATIONS.md) antes
-de usar acciones de energía.
+Review [docs/OPERATIONS.md](docs/OPERATIONS.md) before using power
+operations.
 
-## Uso del dashboard
+## Using the dashboard
 
-1. Inicia la aplicación con Uvicorn.
-2. Abre `http://127.0.0.1:8080/`.
-3. En **Telemetry**, revisa CPU, memoria, disco y red.
-4. En **Resources**, actualiza el inventario y revisa el estado de cada VM o
-   LXC.
-5. En **AI Copilot**, escribe una consulta operacional usando lenguaje
-   natural.
-6. Antes de usar `START` o `STOP`, confirma el VMID y la operación en Proxmox.
+1. Start the application with Uvicorn.
+2. Open `http://127.0.0.1:8080/`.
+3. In **Telemetry**, review CPU, memory, disk, and network values.
+4. In **Resources**, refresh the inventory and review each resource's state.
+5. In **AI Copilot**, enter a specific diagnostic question.
+6. Before using **START** or **STOP**, confirm the VMID and expected impact in
+   Proxmox.
 
-La interfaz actual muestra acciones de energía para recursos. El endpoint
-correspondiente no implementa todavía una política de allowlist, confirmación
-humana, autenticación de operador ni un modo autónomo seguro; por eso debe
-mantenerse restringido a localhost o a una red de administración confiable.
+The current dashboard exposes power actions for resources. The corresponding
+API route does not yet enforce authentication, operator confirmation, or a
+resource allowlist. Keep the service bound to localhost or an isolated
+management network until those controls are implemented.
 
-## API disponible
+## API reference
 
-La API no usa actualmente un prefijo `/api`.
+The API does not currently use an `/api` prefix.
 
-| Método | Ruta | Propósito |
+| Method | Path | Purpose |
 |---|---|---|
-| `GET` | `/health` | Comprueba que JACK-OS está en línea. |
-| `GET` | `/telemetry` | Obtiene CPU, memoria, disco y red. |
-| `GET` | `/process/{process_name}` | Revisa si un proceso está activo. |
-| `POST` | `/remediate/dry-run` | Simula una remediación y obtiene evaluación de IA. |
-| `GET` | `/proxmox/resources` | Consulta VMs y contenedores en Proxmox. |
-| `POST` | `/proxmox/power` | Envía `start`, `shutdown` o `stop` a un recurso. |
-| `POST` | `/ai/chat` | Analiza una consulta con telemetría e inventario actual. |
+| `GET` | `/health` | Confirms that JACK-OS is online. |
+| `GET` | `/telemetry` | Returns CPU, memory, disk, and network metrics. |
+| `GET` | `/process/{process_name}` | Reports whether a process is running. |
+| `POST` | `/remediate/dry-run` | Simulates remediation and requests an AI assessment. |
+| `GET` | `/proxmox/resources` | Returns the current VM and container inventory. |
+| `POST` | `/proxmox/power` | Sends `start`, `shutdown`, or `stop` to a resource. |
+| `POST` | `/ai/chat` | Analyzes an operator message with live context. |
 
-Ejemplos:
+Basic PowerShell checks:
 
 ```powershell
 Invoke-RestMethod http://127.0.0.1:8080/health
@@ -216,7 +215,7 @@ Invoke-RestMethod http://127.0.0.1:8080/telemetry
 Invoke-RestMethod http://127.0.0.1:8080/proxmox/resources
 ```
 
-Para una acción de energía:
+Example power request:
 
 ```powershell
 $body = @{ vmid = 101; action = "shutdown" } | ConvertTo-Json
@@ -227,39 +226,62 @@ Invoke-RestMethod `
   -Body $body
 ```
 
-Usa este ejemplo solamente con un recurso de prueba y con permisos revisados.
+Run this example only against a non-critical test resource after reviewing
+permissions and the target VMID.
 
-## Seguridad y límites
+## Proxmox client
 
-- `.env` está excluido por `.gitignore`; no debe compartirse.
-- Las credenciales expuestas deben revocarse y reemplazarse.
-- Usa una cuenta de Proxmox dedicada con mínimo privilegio.
-- Activa `PROXMOX_VERIFY_SSL=true` cuando exista una CA confiable.
-- Mantén `HOST=127.0.0.1` mientras no exista autenticación para la API.
-- `allow_origins=["*"]` está configurado actualmente para desarrollo; debe
-  restringirse antes de publicar el dashboard.
-- Los endpoints `/proxmox/power` y `/ai/chat` no tienen autenticación propia.
-- Un diagnóstico de Gemini es una recomendación, no una autorización.
-- La aplicación no debe ejecutar comandos recibidos directamente de la IA.
-- La rama actual no incluye todavía setpoints, promedios móviles persistentes,
-  allowlist de apagado, recursos protegidos, periodo de gracia ni bitácora de
-  decisiones autónomas.
+The client queries nodes, QEMU VMs, and LXC containers. It normalizes resource
+data such as:
 
-Consulta [docs/SECURITY.md](D:/monitor-ia/jack-os/docs/SECURITY.md) para el
-modelo de amenazas y las medidas de operación segura.
+- Resource type: `VM` or `LXC`.
+- VMID, name, node, and current status.
+- CPU and memory usage.
+- Network configuration and known IP addresses.
+- Available snapshots.
+- GPU or passthrough configuration hints.
 
-## Verificación
+The client distinguishes QEMU and LXC power semantics. Prefer `shutdown` for a
+graceful operation. An immediate `stop` can interrupt guest activity and may
+cause data loss.
 
-### Sintaxis y ayuda
+## Security
+
+- Keep `.env` local; it is excluded by `.gitignore`.
+- Rotate any credential that has been exposed in a terminal, screenshot,
+  conversation, log, or repository.
+- Use a dedicated Proxmox account with least privilege.
+- Set `PROXMOX_VERIFY_SSL=true` when a trusted certificate is available.
+- Keep `HOST=127.0.0.1` until API authentication is implemented.
+- Restrict CORS before exposing the service beyond a controlled environment.
+- Treat Gemini output as untrusted advice, not as authorization.
+- Never execute shell commands generated by the AI.
+- Protect `/proxmox/power` with authentication, authorization, confirmation,
+  and an explicit resource policy before production use.
+
+`FinalBranch` does not yet implement setpoints, persistent rolling averages,
+resource allowlists, protected resources, grace periods, decision auditing, or
+fully autonomous shutdown control. These are prerequisites for safe autonomy.
+See [docs/SECURITY.md](docs/SECURITY.md) for the current security model.
+
+## Verification
+
+### Validate Python syntax
 
 ```powershell
-python -m py_compile .\app\config.py .\app\main.py .\app\api\routes.py .\app\core\orchestrator.py .\app\services\ai_diagnostics.py .\app\services\telemetry.py .\scripts\proxmox_agent.py
-python -m uvicorn app.main:app --help
+python -m py_compile `
+  .\app\config.py `
+  .\app\main.py `
+  .\app\api\routes.py `
+  .\app\core\orchestrator.py `
+  .\app\services\ai_diagnostics.py `
+  .\app\services\telemetry.py `
+  .\scripts\proxmox_agent.py
 ```
 
-### Comprobación funcional
+### Check the API
 
-Con la aplicación ejecutándose:
+With the service running:
 
 ```powershell
 Invoke-RestMethod http://127.0.0.1:8080/health
@@ -267,54 +289,59 @@ Invoke-RestMethod http://127.0.0.1:8080/telemetry
 Invoke-RestMethod http://127.0.0.1:8080/proxmox/resources
 ```
 
-Revisa que `/health` devuelva `ONLINE`, que `/telemetry` indique su fuente y
-que el inventario contenga los recursos esperados. Las pruebas de energía
-deben realizarse únicamente sobre una VM o contenedor no crítico.
+Expected results:
 
-## Documentación adicional
+- `/health` reports `ONLINE`.
+- `/telemetry` identifies its source as `PROXMOX_VE_CORE` or
+  `LOCAL_FALLBACK`.
+- `/proxmox/resources` returns the expected VM and LXC resources.
 
-- [Arquitectura](D:/monitor-ia/jack-os/docs/ARCHITECTURE.md)
-- [Instalación y configuración](D:/monitor-ia/jack-os/docs/INSTALLATION.md)
-- [Operación y API](D:/monitor-ia/jack-os/docs/OPERATIONS.md)
-- [Seguridad](D:/monitor-ia/jack-os/docs/SECURITY.md)
+Test power operations only with a disposable or non-critical resource.
 
-## Estructura del proyecto
+## Documentation
+
+- [Architecture](docs/ARCHITECTURE.md)
+- [Installation and configuration](docs/INSTALLATION.md)
+- [Operations and API usage](docs/OPERATIONS.md)
+- [Security model](docs/SECURITY.md)
+
+## Project structure
 
 ```text
 .
 ├── app/
-│   ├── api/routes.py              # Contratos y endpoints HTTP
-│   ├── config.py                 # Configuración desde .env
-│   ├── core/orchestrator.py      # Punto reservado para orquestación
-│   ├── main.py                   # Aplicación FastAPI y dashboard
-│   ├── services/ai_diagnostics.py# Integración Gemini
-│   ├── services/telemetry.py     # Métricas Proxmox/psutil
-│   └── ui/index.html             # Dashboard web
-├── scripts/proxmox_agent.py      # Cliente e inventario Proxmox
+│   ├── api/routes.py               # HTTP contracts and endpoints
+│   ├── config.py                  # .env-backed settings
+│   ├── core/orchestrator.py       # Orchestration extension point
+│   ├── main.py                    # FastAPI application and dashboard
+│   ├── services/ai_diagnostics.py # Gemini integration
+│   ├── services/telemetry.py      # Proxmox and psutil metrics
+│   └── ui/index.html              # Web dashboard
+├── scripts/proxmox_agent.py       # Proxmox client and inventory logic
 ├── requirements.txt
 ├── .env.example
 └── README.md
 ```
 
-## Estado actual y próximos pasos
+## Current status and next steps
 
-### Disponible en `FinalBranch`
+### Available in `FinalBranch`
 
-- Dashboard web operativo.
-- API FastAPI.
-- Inventario de VMs y LXC.
-- Telemetría Proxmox con fallback local.
-- Diagnóstico Gemini y chat contextual.
-- Simulación de remediación.
-- Acciones de energía mediante API.
+- Web dashboard.
+- FastAPI service.
+- Proxmox telemetry with local fallback.
+- VM and LXC inventory.
+- Gemini diagnostics and contextual chat.
+- Dry-run remediation.
+- API-based power operations.
 
-### Recomendado antes de producción
+### Recommended before production
 
-1. Añadir autenticación y autorización a la API.
-2. Restringir CORS y el host de escucha.
-3. Implementar allowlist y recursos protegidos para acciones de energía.
-4. Añadir confirmación humana para `start`, `shutdown` y `stop`.
-5. Implementar setpoints, promedios móviles, periodo de gracia y auditoría.
-6. Separar diagnóstico de IA de la ejecución de acciones.
-7. Añadir pruebas automatizadas para contratos, errores y permisos.
-8. Usar certificados TLS y un usuario Proxmox de mínimo privilegio.
+1. Add API authentication and role-based authorization.
+2. Restrict CORS and network exposure.
+3. Add an explicit resource allowlist and protected-resource policy.
+4. Require human confirmation for `start`, `shutdown`, and `stop`.
+5. Implement setpoints, rolling averages, grace periods, and audit logging.
+6. Keep AI diagnosis separate from deterministic action authorization.
+7. Add automated tests for contracts, errors, permissions, and failure modes.
+8. Use trusted TLS certificates and a least-privilege Proxmox account.
