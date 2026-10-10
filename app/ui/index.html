@@ -2,1902 +2,321 @@
 <html lang="en" class="dark">
 <head>
   <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>JACK-OS // TACTICAL ORCHESTRATION BRIDGE</title>
-  <!-- Google Fonts: JetBrains Mono & Share Tech Mono -->
-  <link rel="preconnect" href="https://fonts.googleapis.com">
-  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-  <link href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:ital,wght@0,300;0,400;0,500;0,700;0,800;1,400&family=Share+Tech+Mono&display=swap" rel="stylesheet">
-  
-  <!-- Tailwind CSS via CDN -->
+  <title>Jack-OS // Proxmox V2.0 Core</title>
   <script src="https://cdn.tailwindcss.com"></script>
-  <script>
-    tailwind.config = {
-      darkMode: 'class',
-      theme: {
-        extend: {
-          fontFamily: {
-            mono: ['"JetBrains Mono"', 'ui-monospace', 'SFMono-Regular', 'Menlo', 'Monaco', 'Consolas', 'monospace'],
-            tech: ['"Share Tech Mono"', 'ui-monospace', 'monospace']
-          },
-          colors: {
-            tactical: {
-              bg: '#0d1117',
-              surface: '#161b22',
-              card: '#131820',
-              border: '#30363d',
-              borderActive: '#06b6d4',
-              green: '#10b981',
-              cyan: '#06b6d4',
-              amber: '#f59e0b',
-              crimson: '#ef4444',
-              muted: '#8b949e',
-              glow: 'rgba(6, 182, 212, 0.15)'
-            }
-          }
-        }
-      }
-    };
-  </script>
-
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=JetBrains+Mono:wght@400;600&display=swap" rel="stylesheet">
   <style>
-    /* Base resets & HUD aesthetic */
-    * {
-      box-sizing: border-box;
-    }
-    body {
-      background-color: #090d13;
-      background-image: 
-        radial-gradient(circle at 50% 0%, rgba(6, 182, 212, 0.08) 0%, transparent 65%),
-        linear-gradient(rgba(48, 54, 61, 0.15) 1px, transparent 1px),
-        linear-gradient(90deg, rgba(48, 54, 61, 0.15) 1px, transparent 1px);
-      background-size: 100% 100%, 32px 32px, 32px 32px;
-      color: #e6edf3;
-      font-family: 'JetBrains Mono', monospace;
-    }
-
-    /* Custom Tactical Scrollbar */
-    ::-webkit-scrollbar {
-      width: 6px;
-      height: 6px;
-    }
-    ::-webkit-scrollbar-track {
-      background: #0d1117;
-      border: 1px solid #21262d;
-    }
-    ::-webkit-scrollbar-thumb {
-      background: #30363d;
-      border-radius: 1px;
-    }
-    ::-webkit-scrollbar-thumb:hover {
-      background: #06b6d4;
-    }
-
-    /* Tactical HUD Card Borders & Accents */
-    .hud-card {
-      background-color: rgba(22, 27, 34, 0.85);
-      border: 1px solid #30363d;
-      position: relative;
-      backdrop-filter: blur(8px);
-      box-shadow: 0 4px 20px rgba(0, 0, 0, 0.5);
-    }
-    .hud-card::before {
-      content: '';
-      position: absolute;
-      top: -1px;
-      left: -1px;
-      width: 8px;
-      height: 8px;
-      border-top: 2px solid #06b6d4;
-      border-left: 2px solid #06b6d4;
-      pointer-events: none;
-    }
-    .hud-card::after {
-      content: '';
-      position: absolute;
-      bottom: -1px;
-      right: -1px;
-      width: 8px;
-      height: 8px;
-      border-bottom: 2px solid #06b6d4;
-      border-right: 2px solid #06b6d4;
-      pointer-events: none;
-    }
-    .hud-card-alert::before {
-      border-top-color: #ef4444;
-      border-left-color: #ef4444;
-    }
-    .hud-card-alert::after {
-      border-bottom-color: #ef4444;
-      border-right-color: #ef4444;
-    }
-
-    /* CRT Monitor Log Effect */
-    .crt-screen {
-      background: #06090e;
-      position: relative;
-      overflow: hidden;
-      box-shadow: inset 0 0 40px rgba(0, 0, 0, 0.95), inset 0 0 10px rgba(16, 185, 129, 0.15);
-      border: 1px solid #21262d;
-    }
-    .crt-screen::before {
-      content: " ";
-      display: block;
-      position: absolute;
-      top: 0; left: 0; bottom: 0; right: 0;
-      background: linear-gradient(rgba(18, 16, 16, 0) 50%, rgba(0, 0, 0, 0.45) 50%), 
-                  linear-gradient(90deg, rgba(255, 0, 0, 0.02), rgba(0, 255, 0, 0.01), rgba(0, 0, 255, 0.02));
-      z-index: 20;
-      background-size: 100% 3px, 4px 100%;
-      pointer-events: none;
-      opacity: 0.85;
-    }
-    .crt-screen::after {
-      content: " ";
-      display: block;
-      position: absolute;
-      top: 0; left: 0; bottom: 0; right: 0;
-      background: radial-gradient(circle, rgba(16, 185, 129, 0.03) 0%, rgba(0,0,0,0.4) 100%);
-      pointer-events: none;
-      z-index: 21;
-    }
-
-    /* Glows */
-    .glow-green {
-      box-shadow: 0 0 12px rgba(16, 185, 129, 0.4);
-    }
-    .glow-cyan {
-      box-shadow: 0 0 12px rgba(6, 182, 212, 0.4);
-    }
-    .glow-amber {
-      box-shadow: 0 0 12px rgba(245, 158, 11, 0.4);
-    }
-    .glow-crimson {
-      box-shadow: 0 0 14px rgba(239, 68, 68, 0.6);
-    }
-
-    /* Pulse beacon */
-    @keyframes tacticalPulse {
-      0%, 100% { opacity: 1; transform: scale(1); }
-      50% { opacity: 0.4; transform: scale(0.92); }
-    }
-    .pulse-beacon {
-      animation: tacticalPulse 2s cubic-bezier(0.4, 0, 0.6, 1) infinite;
-    }
-
-    /* LED Segment Progress Bar */
-    .led-meter-cell {
-      transition: background-color 0.3s ease, box-shadow 0.3s ease;
-    }
-
-    /* Subtle Scanline Animation */
-    @keyframes scanlineAnim {
-      0% { transform: translateY(-100%); }
-      100% { transform: translateY(1000%); }
-    }
-    .crt-beam {
-      position: absolute;
-      top: 0;
-      left: 0;
-      right: 0;
-      height: 40px;
-      background: linear-gradient(180deg, transparent, rgba(16, 185, 129, 0.06), transparent);
-      opacity: 0.6;
-      animation: scanlineAnim 8s linear infinite;
-      pointer-events: none;
-      z-index: 22;
-    }
+    body { font-family: 'Inter', sans-serif; }
+    .mono { font-family: 'JetBrains Mono', monospace; }
   </style>
 </head>
-<body class="min-h-screen text-slate-200 antialiased selection:bg-cyan-500/30 selection:text-cyan-200 p-2 md:p-3 lg:p-4 flex flex-col justify-between">
+<body class="bg-slate-950 text-slate-100 flex flex-col h-screen overflow-hidden selection:bg-purple-900 selection:text-white">
 
-  <!-- TOP HUD HEADER -->
-  <header class="hud-card p-3 mb-3 border border-slate-700/80">
-    <div class="flex flex-col lg:flex-row lg:items-center lg:justify-between gap-3">
-      
-      <!-- Brand & Host Node Identity -->
-      <div class="flex items-center gap-3">
-        <div class="h-10 w-10 flex-shrink-0 bg-slate-900 border border-cyan-500/60 flex items-center justify-center relative group">
-          <div class="w-4 h-4 border border-cyan-400 rotate-45 group-hover:rotate-90 transition-transform duration-500"></div>
-          <div class="w-1.5 h-1.5 bg-emerald-400 absolute"></div>
-        </div>
-        <div>
-          <div class="flex items-center gap-2">
-            <span class="text-xs font-black tracking-widest text-cyan-400 font-tech uppercase">SYS.HARNESS // SEC-OPS</span>
-            <span class="text-[10px] bg-slate-800 text-slate-400 px-1.5 py-0.5 border border-slate-700">BUILD 2.4.9-RT</span>
-          </div>
-          <h1 class="text-lg md:text-xl font-extrabold tracking-wider text-slate-100 flex items-center gap-2">
-            JACK-OS <span class="text-cyan-400 font-light">//</span> <span class="text-slate-300">TACTICAL ORCHESTRATION BRIDGE</span>
-          </h1>
-          <div class="text-[11px] font-mono text-slate-400 flex items-center gap-2">
-            <span>HOST NODE:</span>
-            <span id="host-node-identity" class="text-emerald-400 font-bold tracking-wider">THE-BANISHED (LOCAL HARNESS)</span>
-            <span class="text-slate-600">|</span>
-            <span class="text-slate-400">ZONE:</span>
-            <span class="text-cyan-300">BARE-METAL-0</span>
-          </div>
-        </div>
-      </div>
-
-      <!-- Telemetry Health & Mode Badges -->
-      <div class="flex flex-wrap items-center gap-2 sm:gap-3 text-xs">
-        
-        <!-- Subsystem Link Status Badge (Checks GET /health every 5s) -->
-        <div class="bg-slate-900/90 border border-slate-700 px-3 py-1.5 flex items-center gap-2.5">
-          <span class="text-[10px] text-slate-400 uppercase tracking-wider font-tech">API LINK</span>
-          <div id="link-status-badge" class="flex items-center gap-1.5 font-bold tracking-wider text-emerald-400">
-            <span class="w-2 h-2 rounded-full bg-emerald-400 pulse-beacon"></span>
-            <span id="link-status-text">INITIALIZING</span>
-          </div>
-          <span id="link-latency" class="text-[10px] text-slate-400 font-mono">--ms</span>
-        </div>
-
-        <!-- Mode Indicator (Live vs Simulated Fallback) -->
-        <div class="bg-slate-900/90 border border-slate-700 px-3 py-1.5 flex items-center gap-2">
-          <span class="text-[10px] text-slate-400 uppercase tracking-wider font-tech">MODE</span>
-          <span id="data-mode-badge" class="text-[11px] font-bold px-1.5 py-0.5 bg-cyan-950/80 text-cyan-400 border border-cyan-800/80 uppercase">
-            DETECTING...
-          </span>
-        </div>
-
-        <!-- Mission Clock (UTC / High-Precision) -->
-        <div class="bg-slate-900/90 border border-slate-700 px-3 py-1.5 font-mono text-right hidden sm:block">
-          <div class="text-[10px] text-slate-400 flex items-center justify-between gap-3 font-tech">
-            <span>SYS_TIME (UTC)</span>
-            <span id="uptime-counter" class="text-emerald-400">UP: 00:00:00</span>
-          </div>
-          <div id="hud-clock" class="text-xs font-bold text-slate-200 tracking-wider">
-            2026-10-09 00:00:00.000Z
-          </div>
-        </div>
-
-        <!-- Quick Action Toggles -->
-        <div class="flex items-center gap-1.5">
-          <button id="btn-toggle-pause" title="Pause or Resume telemetry updates" class="px-2.5 py-1.5 bg-slate-800 hover:bg-slate-700 border border-slate-600 text-slate-300 hover:text-white font-mono text-[11px] transition-colors flex items-center gap-1.5">
-            <span id="pause-indicator" class="w-1.5 h-1.5 bg-emerald-400 rounded-full"></span>
-            <span id="pause-btn-text">POLL: ACTIVE</span>
-          </button>
-          
-          <button id="btn-force-mode" title="Toggle between Forced Mock and Live API mode" class="px-2 py-1.5 bg-slate-800 hover:bg-slate-700 border border-slate-600 text-slate-300 hover:text-white font-mono text-[11px] transition-colors">
-            MODE TOGGLE
-          </button>
-
-          <button id="btn-spike-test" title="Inject a momentary spike to test threshold alerts (>80% / >90%)" class="px-2 py-1.5 bg-amber-950/60 hover:bg-amber-900/80 border border-amber-700 text-amber-300 font-mono text-[11px] transition-colors">
-            ⚡ SPIKE TEST
-          </button>
-
-          <button id="btn-endpoint-config" title="Configure Backend API Target URL" class="px-2 py-1.5 bg-slate-800 hover:bg-slate-700 border border-slate-600 text-slate-400 hover:text-white font-mono text-[11px] transition-colors">
-            ⚙
-          </button>
-        </div>
-
-      </div>
-
+  <!-- Top Bar -->
+  <header class="h-14 border-b border-slate-800 bg-slate-900/60 px-6 flex items-center justify-between flex-shrink-0">
+    <div class="flex items-center gap-3">
+      <div class="w-3 h-3 rounded-full bg-emerald-500 animate-pulse"></div>
+      <span class="font-bold tracking-tight text-lg">JACK-OS <span class="text-xs text-slate-400 font-normal">v2.0 // TACTICAL BRIDGE</span></span>
+    </div>
+    <div class="flex items-center gap-4 text-xs mono">
+      <span class="text-slate-400">NODE: <strong class="text-slate-200">THE-BANISHED</strong></span>
+      <span class="px-2 py-0.5 rounded bg-emerald-950 text-emerald-400 border border-emerald-800">ONLINE</span>
+      <span class="text-slate-500" id="clock">00:00:00 UTC</span>
     </div>
   </header>
 
-  <!-- MAIN TELEMETRY & OPERATIONS HUD -->
-  <main class="space-y-3 flex-grow">
-    
-    <!-- MODULE 1: TELEMETRY DECK (4 HUD METRIC CARDS) -->
-    <section aria-label="Telemetry Deck" class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-3">
-      
-      <!-- CARD 1: CPU GAUGE -->
-      <div id="card-cpu" class="hud-card p-3 flex flex-col justify-between">
-        <div class="flex items-center justify-between border-b border-slate-800 pb-2 mb-2">
-          <div class="flex items-center gap-1.5">
-            <div class="w-2 h-2 bg-emerald-400"></div>
-            <h2 class="text-xs font-bold text-slate-200 tracking-wider">CPU UTILIZATION</h2>
-          </div>
-          <span id="cpu-load-state" class="text-[10px] font-bold px-1.5 py-0.2 bg-emerald-950 text-emerald-400 border border-emerald-800">NOMINAL</span>
-        </div>
+  <div class="flex flex-1 overflow-hidden">
+    <!-- Sidebar Navigation -->
+    <aside class="w-64 border-r border-slate-800 bg-slate-900/30 flex flex-col justify-between p-4 flex-shrink-0">
+      <nav class="space-y-1.5">
+        <button onclick="switchTab('tab-telemetry')" id="nav-telemetry" class="w-full flex items-center gap-3 px-3 py-2.5 rounded-lg text-sm font-medium bg-slate-800 text-slate-100 border border-slate-700 transition">
+          <svg class="w-4 h-4 text-emerald-400" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z"/></svg>
+          Node Telemetry
+        </button>
+        <button onclick="switchTab('tab-resources')" id="nav-resources" class="w-full flex items-center gap-3 px-3 py-2.5 rounded-lg text-sm font-medium text-slate-400 hover:bg-slate-800/60 hover:text-slate-200 transition">
+          <svg class="w-4 h-4 text-blue-400" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 12h14M5 12a2 2 0 01-2-2V6a2 2 0 012-2h14a2 2 0 012 2v4a2 2 0 01-2 2M5 12a2 2 0 00-2 2v4a2 2 0 002 2h14a2 2 0 002-2v-4a2 2 0 00-2-2m-2-4h.01M17 16h.01"/></svg>
+          VMs & LXCs
+        </button>
+        <button onclick="switchTab('tab-ai')" id="nav-ai" class="w-full flex items-center gap-3 px-3 py-2.5 rounded-lg text-sm font-medium text-slate-400 hover:bg-slate-800/60 hover:text-slate-200 transition">
+          <svg class="w-4 h-4 text-purple-400" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 10h.01M12 10h.01M16 10h.01M9 16H5a2 2 0 01-2-2V6a2 2 0 012-2h14a2 2 0 012 2v8a2 2 0 01-2 2h-5l-5 5v-5z"/></svg>
+          AI Operations Terminal
+        </button>
+      </nav>
+      <div class="p-3 bg-slate-900/60 border border-slate-800/80 rounded-lg text-[11px] text-slate-400 mono space-y-1">
+        <div class="text-slate-300 font-semibold">INFRASTRUCTURE</div>
+        <div>Core: Proxmox VE</div>
+        <div>Network: Tailscale P2P</div>
+        <div>Copilot: Jack // Gemini</div>
+      </div>
+    </aside>
 
-        <div class="flex items-baseline justify-between mb-2">
-          <div>
-            <div id="cpu-percent-val" class="text-3xl font-black font-mono tracking-tight text-emerald-400">
-              00.0<span class="text-base font-normal text-slate-500">%</span>
-            </div>
-            <div class="text-[10px] text-slate-400 font-tech">SCHEDULER: CFS REAL-TIME</div>
-          </div>
-          <div class="text-right">
-            <div id="cpu-cores-count" class="text-sm font-bold text-slate-300 font-mono">16 CORES</div>
-            <div id="cpu-threads-count" class="text-[10px] text-slate-400">32 LOGICAL THREADS</div>
-          </div>
-        </div>
+    <!-- Main Workspace -->
+    <main class="flex-1 overflow-y-auto p-6 bg-slate-950">
 
-        <!-- Real-time CPU Sparkline Waveform -->
-        <div class="h-10 w-full bg-slate-900/90 border border-slate-800 relative overflow-hidden mb-2">
-          <svg id="cpu-sparkline" class="w-full h-full" preserveAspectRatio="none" viewBox="0 0 200 40">
-            <defs>
-              <linearGradient id="cpu-grad" x1="0" y1="0" x2="0" y2="1">
-                <stop offset="0%" stop-color="#10b981" stop-opacity="0.5"/>
-                <stop offset="100%" stop-color="#10b981" stop-opacity="0.0"/>
-              </linearGradient>
-            </defs>
-            <path id="cpu-sparkline-area" d="" fill="url(#cpu-grad)" />
-            <path id="cpu-sparkline-line" d="" fill="none" stroke="#10b981" stroke-width="1.8" />
-          </svg>
-          <div class="absolute right-1 top-1 text-[9px] text-slate-400 font-mono">HIST: 30s</div>
-        </div>
-
-        <!-- Per-Core Load Matrix Grid (16 mini core meters) -->
+      <!-- TAB 1: NODE TELEMETRY -->
+      <section id="tab-telemetry" class="space-y-6">
         <div>
-          <div class="text-[9px] text-slate-400 font-tech flex justify-between mb-1">
-            <span>CORE LOAD MATRIX</span>
-            <span id="cpu-freq-label" class="text-cyan-400">CLOCK: 4.40 GHz</span>
-          </div>
-          <div id="core-matrix-grid" class="grid grid-cols-8 gap-1 h-3.5">
-            <!-- 16 generated bars -->
-          </div>
-        </div>
-      </div>
-
-      <!-- CARD 2: MEMORY GAUGE (Threshold Color Shifts >80% Amber, >90% Crimson) -->
-      <div id="card-memory" class="hud-card p-3 flex flex-col justify-between">
-        <div class="flex items-center justify-between border-b border-slate-800 pb-2 mb-2">
-          <div class="flex items-center gap-1.5">
-            <div id="mem-indicator-dot" class="w-2 h-2 bg-cyan-400"></div>
-            <h2 class="text-xs font-bold text-slate-200 tracking-wider">MEMORY BUFFER</h2>
-          </div>
-          <span id="mem-status-badge" class="text-[10px] font-bold px-1.5 py-0.2 bg-cyan-950 text-cyan-400 border border-cyan-800">HEALTHY</span>
+          <h1 class="text-xl font-bold text-slate-100">Hypervisor Status</h1>
+          <p class="text-xs text-slate-400">Real-time telemetry from The-Banished</p>
         </div>
 
-        <div class="flex items-baseline justify-between mb-1">
+        <div class="grid grid-cols-1 md:grid-cols-4 gap-4">
+          <!-- CPU Card -->
+          <div class="bg-slate-900/90 border border-slate-800 p-5 rounded-xl">
+            <span class="text-xs text-slate-400 font-medium">CPU Usage</span>
+            <div class="text-3xl font-bold mono mt-2 text-emerald-400" id="cpu-pct">--%</div>
+            <div class="text-xs text-slate-500 mt-1" id="cpu-cores">8 Logical Threads</div>
+          </div>
+          <!-- RAM Card -->
+          <div class="bg-slate-900/90 border border-slate-800 p-5 rounded-xl">
+            <span class="text-xs text-slate-400 font-medium">RAM</span>
+            <div class="text-3xl font-bold mono mt-2 text-emerald-400" id="ram-pct">--%</div>
+            <div class="text-xs text-slate-500 mt-1" id="ram-usage">-- / -- MB</div>
+          </div>
+          <!-- Storage Card -->
+          <div class="bg-slate-900/90 border border-slate-800 p-5 rounded-xl">
+            <span class="text-xs text-slate-400 font-medium">Storage (rootfs)</span>
+            <div class="text-3xl font-bold mono mt-2 text-blue-400" id="storage-pct">--%</div>
+            <div class="text-xs text-slate-500 mt-1" id="storage-usage">-- / -- GB</div>
+          </div>
+          <!-- Network Card -->
+          <div class="bg-slate-900/90 border border-slate-800 p-5 rounded-xl">
+            <span class="text-xs text-slate-400 font-medium">Network (Throughput)</span>
+            <div class="text-3xl font-bold mono mt-2 text-purple-400" id="net-rx">0.0 KB/s</div>
+            <div class="text-xs text-slate-500 mt-1" id="net-tx">TX: 0.0 KB/s</div>
+          </div>
+        </div>
+      </section>
+
+      <!-- TAB 2: VIRTUAL MACHINES AND SERVICES -->
+      <section id="tab-resources" class="hidden space-y-5">
+        <div class="flex items-center justify-between">
           <div>
-            <div id="mem-percent-val" class="text-3xl font-black font-mono tracking-tight text-cyan-400">
-              00.0<span class="text-base font-normal text-slate-500">%</span>
-            </div>
-            <div class="text-[10px] text-slate-400 font-tech">ECC DDR5 // LOW LATENCY</div>
+            <h1 class="text-xl font-bold text-slate-100">Virtual Machines & Containers</h1>
+            <p class="text-xs text-slate-400">Instances hosted on node The-Banished</p>
           </div>
-          <div class="text-right font-mono">
-            <div class="text-xs text-slate-300"><span id="mem-used-mb" class="text-slate-100 font-bold">0</span> / <span id="mem-total-mb" class="text-slate-400">32768</span> MB</div>
-            <div class="text-[10px] text-slate-400">AVAIL: <span id="mem-avail-mb" class="text-emerald-400 font-bold">0</span> MB</div>
-          </div>
-        </div>
-
-        <!-- Dynamic Segmented LED / Threshold Progress Bar -->
-        <div class="space-y-1.5 my-2">
-          <div class="flex justify-between text-[10px] font-mono text-slate-400">
-            <span>ALLOCATION</span>
-            <span id="mem-threshold-text" class="text-slate-400">THRESHOLD: &lt; 80% NOMINAL</span>
-          </div>
-          
-          <!-- Outer bar -->
-          <div class="h-3 w-full bg-slate-900 border border-slate-700/80 p-0.5 flex gap-0.5">
-            <div id="mem-progress-bar" class="h-full bg-cyan-400 transition-all duration-500" style="width: 0%"></div>
-          </div>
-          
-          <!-- Segment markers indicator: 80% and 90% markers -->
-          <div class="relative w-full text-[8px] text-slate-400 font-mono h-2.5">
-            <span class="absolute left-0">0%</span>
-            <span class="absolute" style="left: 50%;">50%</span>
-            <span class="absolute text-amber-500 font-bold" style="left: 80%;">| 80% WARN</span>
-            <span class="absolute text-rose-500 font-bold right-0">90% CRIT |</span>
-          </div>
-        </div>
-
-        <!-- Swap & Cache Telemetry sub-metrics -->
-        <div class="grid grid-cols-2 gap-2 pt-1 border-t border-slate-800 text-[10px] font-mono">
-          <div>
-            <span class="text-slate-400">SWAP:</span>
-            <span id="mem-swap-val" class="text-slate-200">512 / 8192 MB</span>
-          </div>
-          <div class="text-right">
-            <span class="text-slate-400">BUFF/CACHE:</span>
-            <span id="mem-cache-val" class="text-slate-200">6,120 MB</span>
-          </div>
-        </div>
-      </div>
-
-      <!-- CARD 3: STORAGE MATRIX (ROOT /) -->
-      <div id="card-storage" class="hud-card p-3 flex flex-col justify-between">
-        <div class="flex items-center justify-between border-b border-slate-800 pb-2 mb-2">
-          <div class="flex items-center gap-1.5">
-            <div class="w-2 h-2 bg-emerald-400"></div>
-            <h2 class="text-xs font-bold text-slate-200 tracking-wider">STORAGE MATRIX</h2>
-          </div>
-          <span class="text-[10px] font-mono text-slate-400">FS: EXT4 // NVMe</span>
-        </div>
-
-        <div class="flex items-baseline justify-between mb-1">
-          <div>
-            <div id="storage-percent-val" class="text-3xl font-black font-mono tracking-tight text-slate-100">
-              00.0<span class="text-base font-normal text-slate-500">%</span>
-            </div>
-            <div class="text-[10px] text-slate-400 font-tech">MOUNT: /dev/nvme0n1p2</div>
-          </div>
-          <div class="text-right font-mono">
-            <div class="text-xs text-slate-300"><span id="storage-used-gb" class="text-slate-100 font-bold">0</span> / <span id="storage-total-gb" class="text-slate-400">512</span> GB</div>
-            <div class="text-[10px] text-slate-400">FREE: <span id="storage-free-gb" class="text-cyan-400 font-bold">0</span> GB</div>
-          </div>
-        </div>
-
-        <!-- Storage Progress Meter -->
-        <div class="my-2">
-          <div class="h-2 w-full bg-slate-900 border border-slate-700/80 overflow-hidden">
-            <div id="storage-progress-bar" class="h-full bg-gradient-to-r from-emerald-500 to-cyan-500 transition-all duration-500" style="width: 0%"></div>
-          </div>
-        </div>
-
-        <!-- Storage I/O throughput rates -->
-        <div class="bg-slate-900/80 border border-slate-800/80 p-1.5 space-y-1 text-[10px] font-mono">
-          <div class="flex justify-between">
-            <span class="text-slate-400">DISK READ:</span>
-            <span id="disk-read-val" class="text-emerald-400 font-bold">24.2 MB/s</span>
-          </div>
-          <div class="flex justify-between">
-            <span class="text-slate-400">DISK WRITE:</span>
-            <span id="disk-write-val" class="text-cyan-400 font-bold">14.8 MB/s</span>
-          </div>
-          <div class="flex justify-between text-[9px] text-slate-400 pt-0.5 border-t border-slate-800">
-            <span>INODES UTILIZED:</span>
-            <span id="disk-inodes-val">28.4% (3.4M/12M)</span>
-          </div>
-        </div>
-      </div>
-
-      <!-- CARD 4: NETWORK I/O STREAM -->
-      <div id="card-network" class="hud-card p-3 flex flex-col justify-between">
-        <div class="flex items-center justify-between border-b border-slate-800 pb-2 mb-2">
-          <div class="flex items-center gap-1.5">
-            <div class="w-2 h-2 bg-cyan-400"></div>
-            <h2 class="text-xs font-bold text-slate-200 tracking-wider">NETWORK I/O STREAM</h2>
-          </div>
-          <span class="text-[10px] font-mono text-cyan-400 bg-cyan-950/80 px-1 border border-cyan-800">eth0 [10GbE]</span>
-        </div>
-
-        <!-- Live Instantaneous Rates -->
-        <div class="grid grid-cols-2 gap-2 mb-2">
-          <div class="bg-slate-900/90 border border-slate-800 p-1.5">
-            <div class="text-[9px] text-slate-400 font-tech">RX STREAM RATE</div>
-            <div id="net-rx-rate" class="text-base font-bold font-mono text-cyan-400 tracking-tight">0.0 KB/s</div>
-            <div id="net-rx-pkts-rate" class="text-[9px] text-slate-400 font-mono">0 pps</div>
-          </div>
-          <div class="bg-slate-900/90 border border-slate-800 p-1.5">
-            <div class="text-[9px] text-slate-400 font-tech">TX STREAM RATE</div>
-            <div id="net-tx-rate" class="text-base font-bold font-mono text-emerald-400 tracking-tight">0.0 KB/s</div>
-            <div id="net-tx-pkts-rate" class="text-[9px] text-slate-400 font-mono">0 pps</div>
-          </div>
-        </div>
-
-        <!-- Real-time Dual Sparkline -->
-        <div class="h-10 w-full bg-slate-900/90 border border-slate-800 relative overflow-hidden mb-2">
-          <svg id="net-sparkline" class="w-full h-full" preserveAspectRatio="none" viewBox="0 0 200 40">
-            <path id="net-sparkline-rx" d="" fill="none" stroke="#06b6d4" stroke-width="1.8" />
-            <path id="net-sparkline-tx" d="" fill="none" stroke="#10b981" stroke-width="1.5" stroke-dasharray="2 1" />
-          </svg>
-          <div class="absolute right-1 top-1 text-[8px] text-slate-400 font-mono">
-            <span class="text-cyan-400">■ RX</span> <span class="text-emerald-400 ml-1">■ TX</span>
-          </div>
-        </div>
-
-        <!-- Cumulative Counters -->
-        <div class="grid grid-cols-2 gap-2 text-[10px] font-mono border-t border-slate-800 pt-1">
-          <div>
-            <div class="text-slate-400">TOTAL RX:</div>
-            <div id="net-total-rx" class="text-slate-200 font-bold truncate">0 MB (0 pkts)</div>
-          </div>
-          <div class="text-right">
-            <div class="text-slate-400">TOTAL TX:</div>
-            <div id="net-total-tx" class="text-slate-200 font-bold truncate">0 MB (0 pkts)</div>
-          </div>
-        </div>
-      </div>
-
-    </section>
-
-    <!-- MODULE 2 & 3: SPLIT TERMINAL LOG (60%) & REMEDIATION CONSOLE (40%) -->
-    <section class="grid grid-cols-1 lg:grid-cols-12 gap-3 items-stretch">
-      
-      <!-- MODULE 2: LIVE SYSTEM ACTIVITY & CRT RETRO TERMINAL LOG (7 cols) -->
-      <div class="lg:col-span-7 flex flex-col">
-        <div class="hud-card flex flex-col h-full p-3">
-          
-          <!-- Terminal Header & Tactical Controls -->
-          <div class="flex flex-wrap items-center justify-between border-b border-slate-800 pb-2 mb-2 gap-2">
-            <div class="flex items-center gap-2">
-              <div class="w-2.5 h-2.5 bg-emerald-400 rounded-none"></div>
-              <h2 class="text-xs font-bold text-slate-100 tracking-wider">LIVE SYSTEM ACTIVITY &amp; EVENT LOG</h2>
-              <span id="log-count-badge" class="text-[10px] bg-slate-800 text-slate-300 px-1.5 py-0.5 border border-slate-700 font-mono">0 EVENTS</span>
-            </div>
-
-            <!-- Terminal Toolbar Buttons -->
-            <div class="flex items-center gap-1.5 text-[10px] font-mono">
-              <!-- Filter Selectors -->
-              <div class="flex items-center bg-slate-900 border border-slate-700 p-0.5">
-                <button class="log-filter-btn px-1.5 py-0.5 text-cyan-400 bg-slate-800 font-bold" data-filter="ALL">ALL</button>
-                <button class="log-filter-btn px-1.5 py-0.5 text-slate-400 hover:text-white" data-filter="INFO">INFO</button>
-                <button class="log-filter-btn px-1.5 py-0.5 text-slate-400 hover:text-amber-400" data-filter="WARN">WARN</button>
-                <button class="log-filter-btn px-1.5 py-0.5 text-slate-400 hover:text-rose-400" data-filter="CRIT">CRIT</button>
-              </div>
-
-              <!-- CRT FX Toggle -->
-              <button id="btn-crt-fx" title="Toggle CRT scanline raster effect" class="px-2 py-0.5 bg-slate-800 hover:bg-slate-700 border border-slate-600 text-slate-300">
-                CRT: ON
-              </button>
-
-              <!-- Autoscroll Lock -->
-              <button id="btn-autoscroll" title="Toggle Auto-Scroll Pin" class="px-2 py-0.5 bg-cyan-950/80 border border-cyan-800 text-cyan-300">
-                PIN: ON
-              </button>
-
-              <!-- Clear Console -->
-              <button id="btn-clear-logs" title="Clear console log events" class="px-2 py-0.5 bg-slate-800 hover:bg-rose-950/80 hover:border-rose-700 text-slate-300 hover:text-rose-200 border border-slate-700 transition-colors">
-                CLEAR
-              </button>
-            </div>
-          </div>
-
-          <!-- CRT Output Screen -->
-          <div id="crt-container" class="crt-screen rounded-sm flex-grow min-h-[360px] max-h-[500px] flex flex-col justify-end p-2 relative font-mono text-xs">
-            <div class="crt-beam"></div>
-            
-            <div id="terminal-feed" class="overflow-y-auto space-y-1 z-10 pr-2 h-full scroll-smooth select-text">
-              <!-- Terminal logs stream here -->
-            </div>
-          </div>
-
-          <!-- Terminal Input Status bar -->
-          <div class="mt-2 pt-1.5 border-t border-slate-800/80 flex items-center justify-between text-[10px] text-slate-400 font-mono">
-            <div class="flex items-center gap-2">
-              <span class="w-1.5 h-1.5 bg-emerald-400 animate-ping rounded-full"></span>
-              <span class="text-slate-400">TELEMETRY PROBE:</span>
-              <span class="text-emerald-400 font-bold">eBPF HARNESS LISTENER ACTIVE</span>
-            </div>
-            <div class="flex items-center gap-3">
-              <span>LATENCY: &lt;1.2ms</span>
-              <button id="btn-export-logs" class="text-cyan-400 hover:underline">EXPORT LOG</button>
-            </div>
-          </div>
-
-        </div>
-      </div>
-
-      <!-- MODULE 3: ACTION / DRY-RUN REMEDIATION CONSOLE (5 cols) -->
-      <div class="lg:col-span-5 flex flex-col">
-        <div class="hud-card flex flex-col h-full p-3">
-          
-          <div class="flex items-center justify-between border-b border-slate-800 pb-2 mb-3">
-            <div class="flex items-center gap-2">
-              <div class="w-2.5 h-2.5 bg-amber-400"></div>
-              <h2 class="text-xs font-bold text-slate-100 tracking-wider">REMEDIATION CONSOLE // DRY-RUN DISPATCH</h2>
-            </div>
-            <span class="text-[10px] bg-amber-950/80 text-amber-300 px-1.5 py-0.5 border border-amber-800 font-mono font-bold">SANDBOX ARMED</span>
-          </div>
-
-          <!-- Remediation Trigger Form -->
-          <form id="remediation-form" class="space-y-3 mb-3">
-            
-            <!-- Target Subsystem Selection -->
-            <div>
-              <label class="block text-[11px] font-mono text-slate-300 mb-1 flex justify-between">
-                <span>TARGET SUBSYSTEM / RESOURCE</span>
-                <span class="text-slate-400">e.g. service-mesh</span>
-              </label>
-              <div class="relative">
-                <input 
-                  type="text" 
-                  id="target-input" 
-                  required
-                  placeholder="e.g. service-mesh, disk-cache" 
-                  value="service-mesh"
-                  class="w-full bg-slate-900/90 border border-slate-700 px-2.5 py-1.5 text-xs text-cyan-300 font-mono focus:border-cyan-400 focus:outline-none focus:ring-1 focus:ring-cyan-400 transition-colors"
-                />
-              </div>
-
-              <!-- Quick Target Pills -->
-              <div class="flex flex-wrap gap-1 mt-1 text-[10px] font-mono">
-                <span class="text-slate-400 mr-1 self-center">QUICK:</span>
-                <button type="button" class="preset-pill px-1.5 py-0.5 bg-slate-800 hover:bg-slate-700 text-slate-300 border border-slate-700" data-value="service-mesh">service-mesh</button>
-                <button type="button" class="preset-pill px-1.5 py-0.5 bg-slate-800 hover:bg-slate-700 text-slate-300 border border-slate-700" data-value="disk-cache">disk-cache</button>
-                <button type="button" class="preset-pill px-1.5 py-0.5 bg-slate-800 hover:bg-slate-700 text-slate-300 border border-slate-700" data-value="kernel-buffer">kernel-buffer</button>
-                <button type="button" class="preset-pill px-1.5 py-0.5 bg-slate-800 hover:bg-slate-700 text-slate-300 border border-slate-700" data-value="cgroup-zone-0">cgroup-zone-0</button>
-              </div>
-            </div>
-
-            <!-- Action Selector -->
-            <div>
-              <label class="block text-[11px] font-mono text-slate-300 mb-1">
-                ACTION EXECUTION SELECTOR
-              </label>
-              <select 
-                id="action-select" 
-                class="w-full bg-slate-900 border border-slate-700 px-2.5 py-1.5 text-xs text-amber-300 font-mono focus:border-amber-400 focus:outline-none focus:ring-1 focus:ring-amber-400 transition-colors"
-              >
-                <option value="dry-run-purge">dry-run-purge (Simulate eviction & buffer flush)</option>
-                <option value="soft-restart">soft-restart (Graceful process reincarnation)</option>
-                <option value="isolate">isolate (Sever egress & redirect ingress to null)</option>
-                <option value="drain-traffic">drain-traffic (Gradual 30s connection shed)</option>
-                <option value="apply-cgroup-limit">apply-cgroup-limit (Throttle CPU bandwidth 50%)</option>
-              </select>
-            </div>
-
-            <!-- Reason Description -->
-            <div>
-              <label class="block text-[11px] font-mono text-slate-300 mb-1 flex justify-between">
-                <span>AUDIT REASON / JUSTIFICATION</span>
-                <span class="text-slate-400 font-mono">REQ-SECOPS-AUDIT</span>
-              </label>
-              <textarea 
-                id="reason-input" 
-                rows="2" 
-                required
-                placeholder="Specify telemetry condition or operational reason..." 
-                class="w-full bg-slate-900/90 border border-slate-700 px-2.5 py-1.5 text-xs text-slate-200 font-mono focus:border-cyan-400 focus:outline-none focus:ring-1 focus:ring-cyan-400 transition-colors resize-none"
-              >Simulated memory fragmentation mitigation following cluster telemetry spike.</textarea>
-            </div>
-
-            <!-- Submit Button -->
-            <button 
-              type="submit" 
-              id="btn-dispatch-remediation" 
-              class="w-full py-2 px-4 bg-gradient-to-r from-amber-600 via-amber-500 to-amber-600 hover:from-amber-500 hover:to-amber-400 text-slate-950 font-black text-xs uppercase tracking-widest transition-all duration-200 border border-amber-300 flex items-center justify-center gap-2 group shadow-lg shadow-amber-950/40"
-            >
-              <span id="dispatch-spinner" class="hidden w-3.5 h-3.5 border-2 border-slate-950 border-t-transparent rounded-full animate-spin"></span>
-              <span id="dispatch-label">DISPATCH DRY-RUN PROBE [POST /remediate/dry-run]</span>
+          <div class="flex items-center gap-2">
+            <button onclick="loadResources()" class="px-3 py-1.5 bg-slate-800 hover:bg-slate-700 text-xs font-medium rounded-lg border border-slate-700 flex items-center gap-1.5">
+              <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15"/></svg>
+              Refresh
             </button>
-          </form>
-
-          <!-- Action Audit Panel & Response Viewer -->
-          <div class="flex-grow flex flex-col border border-slate-800 bg-slate-950/80 p-2 relative overflow-hidden">
-            <div class="flex items-center justify-between border-b border-slate-800/80 pb-1.5 mb-1.5">
-              <div class="flex items-center gap-1.5">
-                <span class="text-[10px] font-bold text-slate-300 font-tech">ACTION AUDIT PAYLOAD</span>
-                <span id="audit-status-badge" class="text-[9px] px-1 bg-slate-800 text-slate-400 font-mono">AWAITING DISPATCH</span>
-              </div>
-              <div class="flex items-center gap-2">
-                <span id="audit-latency-badge" class="text-[9px] text-slate-400 font-mono">-- ms</span>
-                <button id="btn-copy-audit" class="text-[10px] text-cyan-400 hover:text-cyan-300 font-mono">COPY JSON</button>
-              </div>
-            </div>
-
-            <pre id="audit-json-viewer" class="flex-grow overflow-auto text-[11px] font-mono text-emerald-400/90 bg-slate-950 p-2 border border-slate-900 rounded-none leading-relaxed select-text min-h-[140px] max-h-[220px]">
-// No remediation action dispatched yet.
-// Configure target parameters above and click "DISPATCH DRY-RUN PROBE".
-// Response payload will be audited and rendered here with blast-radius verification.
-            </pre>
-
-            <!-- Blast Radius & Integrity Strip -->
-            <div id="blast-radius-strip" class="mt-2 pt-1.5 border-t border-slate-800 text-[10px] font-mono flex items-center justify-between text-slate-400">
-              <div class="flex items-center gap-1.5">
-                <span>ESTIMATED BLAST RADIUS:</span>
-                <span id="blast-radius-val" class="text-emerald-400 font-bold">0.00 (NOMINAL)</span>
-              </div>
-              <div>
-                <span>AUDIT HASH:</span>
-                <span id="audit-hash-val" class="text-slate-400">NONE</span>
-              </div>
-            </div>
-
           </div>
-
         </div>
-      </div>
 
-    </section>
+        <div class="bg-slate-900/90 border border-slate-800 rounded-xl overflow-hidden shadow-sm">
+          <table class="w-full text-left text-sm">
+            <thead class="bg-slate-800/60 text-slate-400 text-xs uppercase mono border-b border-slate-800">
+              <tr>
+                <th class="px-5 py-3">VMID</th>
+                <th class="px-5 py-3">Name</th>
+                <th class="px-5 py-3">Type</th>
+                <th class="px-5 py-3">Status</th>
+                <th class="px-5 py-3">CPU</th>
+                <th class="px-5 py-3">Memory</th>
+                <th class="px-5 py-3">IPs</th>
+                <th class="px-5 py-3 text-right">Actions</th>
+              </tr>
+            </thead>
+            <tbody id="resources-body" class="divide-y divide-slate-800 text-slate-300">
+              <tr>
+                <td colspan="8" class="text-center py-8 text-slate-500">Loading cluster resources...</td>
+              </tr>
+            </tbody>
+          </table>
+        </div>
+      </section>
 
-  </main>
-
-  <!-- TACTICAL FOOTER HUD & METRIC TICKER -->
-  <footer class="hud-card p-2 mt-3 border border-slate-800 text-slate-400 text-[11px] font-mono flex flex-col sm:flex-row items-center justify-between gap-2">
-    <div class="flex flex-wrap items-center gap-3">
-      <div class="flex items-center gap-1.5">
-        <span class="w-2 h-2 rounded-full bg-emerald-400"></span>
-        <span class="text-slate-300 font-bold">KERNEL: 6.8.10-RT-BANISHED</span>
-      </div>
-      <span class="text-slate-600">|</span>
-      <span>ACTIVE PROBES: <strong class="text-cyan-400">64 eBPF TRACES</strong></span>
-      <span class="text-slate-600">|</span>
-      <span>WATCHDOG: <strong class="text-emerald-400">ARMED (10s TIMER)</strong></span>
-      <span class="text-slate-600">|</span>
-      <span>IOPS BUFFER: <strong id="footer-iops" class="text-slate-300">2,480 ops/sec</strong></span>
-    </div>
-
-    <div class="flex items-center gap-3 text-slate-400">
-      <span>HARNESS API TARGET: <span id="footer-api-target" class="text-cyan-400 font-bold">http://localhost:8080</span></span>
-      <span class="text-slate-600">|</span>
-      <span class="text-slate-300 font-bold">CLASSIFIED // EYES ONLY</span>
-    </div>
-  </footer>
-
-  <!-- CONFIG MODAL (ENDPOINT & TIMING SETTINGS) -->
-  <div id="config-modal" class="fixed inset-0 bg-black/80 backdrop-blur-sm z-50 hidden flex items-center justify-center p-4">
-    <div class="hud-card max-w-md w-full p-4 border border-cyan-500/80 bg-slate-900">
-      <div class="flex items-center justify-between border-b border-slate-700 pb-2 mb-3">
-        <h3 class="text-sm font-bold text-cyan-400 tracking-wider font-mono">TACTICAL ENDPOINT CONFIGURATION</h3>
-        <button id="btn-close-modal" class="text-slate-400 hover:text-white font-mono text-sm">✕</button>
-      </div>
-
-      <div class="space-y-3 text-xs font-mono">
+      <!-- TAB 3: AI TERMINAL / CHAT -->
+      <section id="tab-ai" class="hidden h-full flex flex-col space-y-4">
         <div>
-          <label class="block text-slate-300 mb-1">FASTAPI TARGET BACKEND URL</label>
-          <input 
-            type="text" 
-            id="cfg-api-url" 
-            value="http://localhost:8080" 
-            placeholder="http://localhost:8080 or leave blank for relative /"
-            class="w-full bg-slate-950 border border-slate-700 px-3 py-1.5 text-cyan-300 focus:outline-none focus:border-cyan-400"
-          />
-          <p class="text-[10px] text-slate-400 mt-1">Default target: relative paths (/health, /telemetry) or http://localhost:8080</p>
+          <h1 class="text-xl font-bold text-slate-100">AI Operations Terminal // Gemini Copilot</h1>
+          <p class="text-xs text-slate-400">Natural-language interaction powered by live telemetry and inventory</p>
         </div>
 
-        <div>
-          <label class="block text-slate-300 mb-1">HEALTH CHECK INTERVAL (MS)</label>
-          <input 
-            type="number" 
-            id="cfg-health-interval" 
-            value="5000" 
-            class="w-full bg-slate-950 border border-slate-700 px-3 py-1.5 text-slate-200 focus:outline-none focus:border-cyan-400"
-          />
+        <!-- Chat Container -->
+        <div id="chat-box" class="flex-1 bg-slate-900/90 border border-slate-800 rounded-xl p-4 overflow-y-auto space-y-3 mono text-xs">
+          <div class="p-3 bg-slate-800/50 rounded-lg text-slate-300">
+            <strong class="text-purple-400">Jack (AI Copilot):</strong> Link active with The-Banished. I have direct access to telemetry and the hypervisor's 16 instances. What task or diagnostic should we run?
+          </div>
         </div>
 
-        <div>
-          <label class="block text-slate-300 mb-1">TELEMETRY POLLING INTERVAL (MS)</label>
-          <input 
-            type="number" 
-            id="cfg-telemetry-interval" 
-            value="2000" 
-            class="w-full bg-slate-950 border border-slate-700 px-3 py-1.5 text-slate-200 focus:outline-none focus:border-cyan-400"
-          />
-        </div>
+        <!-- Command Input -->
+        <form onsubmit="handleSendAI(event)" class="flex gap-2 flex-shrink-0">
+          <input type="text" id="ai-input" placeholder="e.g., Which machines are running? or Diagnose Wazuh's status..." class="flex-1 bg-slate-900 border border-slate-800 rounded-xl px-4 py-3 text-sm focus:outline-none focus:border-purple-500 mono" required />
+          <button type="submit" class="px-6 py-3 bg-purple-600 hover:bg-purple-500 font-semibold rounded-xl text-sm transition">Send</button>
+        </form>
+      </section>
 
-        <div class="pt-2 border-t border-slate-800 flex justify-end gap-2">
-          <button id="btn-reset-cfg" class="px-3 py-1.5 bg-slate-800 hover:bg-slate-700 text-slate-300">RESET DEFAULTS</button>
-          <button id="btn-save-cfg" class="px-3 py-1.5 bg-cyan-600 hover:bg-cyan-500 text-slate-950 font-bold">APPLY &amp; RECONNECT</button>
-        </div>
-      </div>
-    </div>
+    </main>
   </div>
 
-  <!-- PRODUCTION SCRIPT ARCHITECTURE -->
   <script>
-    /**
-     * JACK-OS TACTICAL ORCHESTRATION BRIDGE
-     * Standalone Bare-Metal Resilience Harness Client
-     */
-    (() => {
-      'use strict';
+    let currentResources = [];
 
-      // -------------------------------------------------------------
-      // CONFIGURATION & GLOBAL STATE
-      // -------------------------------------------------------------
-      const getDefaultBaseUrl = () => {
-        if (typeof window !== 'undefined' && window.location && window.location.origin && window.location.origin !== 'null' && window.location.protocol.startsWith('http')) {
-          return window.location.origin;
+    // Tab Switching Logic
+    function switchTab(tabId) {
+      ['tab-telemetry', 'tab-resources', 'tab-ai'].forEach(id => {
+        document.getElementById(id).classList.add('hidden');
+        const navBtn = document.getElementById('nav-' + id.replace('tab-', ''));
+        if (navBtn) {
+          navBtn.className = 'w-full flex items-center gap-3 px-3 py-2.5 rounded-lg text-sm font-medium text-slate-400 hover:bg-slate-800/60 hover:text-slate-200 transition';
         }
-        return 'http://localhost:8080';
-      };
-
-      const CONFIG = {
-        apiBase: getDefaultBaseUrl(),
-        healthInterval: 5000,     // 5 seconds per spec
-        telemetryInterval: 2000,  // 2 seconds per spec
-        maxLogEvents: 150,
-        sparklineSamples: 30,
-        forcedMode: 'AUTO'        // 'AUTO' | 'MOCK' | 'LIVE'
-      };
-
-      /**
-       * Resolves API endpoint to relative paths (e.g. '/health', '/telemetry', '/remediate/dry-run').
-       * If running over HTTP/HTTPS on same origin (or apiBase matches origin), returns pure relative path.
-       * If a custom external base URL is configured (or running via file://), prepends base cleanly.
-       */
-      function getApiUrl(path) {
-        const cleanPath = path.startsWith('/') ? path : `/${path}`;
-        if (typeof window !== 'undefined' && window.location && window.location.origin && window.location.origin !== 'null' && window.location.protocol.startsWith('http')) {
-          if (!CONFIG.apiBase || CONFIG.apiBase === window.location.origin) {
-            return cleanPath; // Relative path directly: e.g. '/health', '/telemetry', '/remediate/dry-run'
-          }
-        }
-        const base = (CONFIG.apiBase || 'http://localhost:8080').replace(/\/+$/, '');
-        return `${base}${cleanPath}`;
+      });
+      document.getElementById(tabId).classList.remove('hidden');
+      const activeNav = document.getElementById('nav-' + tabId.replace('tab-', ''));
+      if (activeNav) {
+        activeNav.className = 'w-full flex items-center gap-3 px-3 py-2.5 rounded-lg text-sm font-medium bg-slate-800 text-slate-100 border border-slate-700 transition';
       }
 
-      const STATE = {
-        isPollingActive: true,
-        isCrtEffectActive: true,
-        isAutoScrollPinned: true,
-        activeLogFilter: 'ALL',
-        isBackendOnline: false,
-        lastHealthCheckMs: 0,
-        consecutiveFailures: 0,
-        uptimeSeconds: 0,
-        sessionStartTs: Date.now(),
-        spikeTestActive: false,
-        spikeTestEndTime: 0,
-        
-        // Mock Generator State for realistic oscillating data
-        mockPhase: 0,
-        mockCoresCount: 16,
-        mockTotalMemMb: 32768,
-        mockTotalStorageGb: 512.0,
-        mockStorageUsedGb: 348.6,
-        mockRxCumulative: 1420582910,
-        mockTxCumulative: 894102940,
-        mockRxPkts: 1249102,
-        mockTxPkts: 820119,
-        lastNetTelemetry: null,
+      if (tabId === 'tab-resources') loadResources();
+    }
 
-        // Historical readings for sparklines
-        cpuHistory: new Array(CONFIG.sparklineSamples).fill(25),
-        netRxHistory: new Array(CONFIG.sparklineSamples).fill(120),
-        netTxHistory: new Array(CONFIG.sparklineSamples).fill(60),
-
-        // Logs
-        logs: [],
-        
-        // Timer handles
-        timers: {
-          clock: null,
-          health: null,
-          telemetry: null,
-          mockLogStream: null
-        }
-      };
-
-      // -------------------------------------------------------------
-      // DOM ELEMENT CACHE
-      // -------------------------------------------------------------
-      const DOM = {
-        // Top HUD
-        linkStatusBadge: document.getElementById('link-status-badge'),
-        linkStatusText: document.getElementById('link-status-text'),
-        linkLatency: document.getElementById('link-latency'),
-        dataModeBadge: document.getElementById('data-mode-badge'),
-        hudClock: document.getElementById('hud-clock'),
-        uptimeCounter: document.getElementById('uptime-counter'),
-        hostNodeIdentity: document.getElementById('host-node-identity'),
-        btnTogglePause: document.getElementById('btn-toggle-pause'),
-        pauseIndicator: document.getElementById('pause-indicator'),
-        pauseBtnText: document.getElementById('pause-btn-text'),
-        btnForceMode: document.getElementById('btn-force-mode'),
-        btnSpikeTest: document.getElementById('btn-spike-test'),
-        btnEndpointConfig: document.getElementById('btn-endpoint-config'),
-
-        // Telemetry: CPU
-        cardCpu: document.getElementById('card-cpu'),
-        cpuPercentVal: document.getElementById('cpu-percent-val'),
-        cpuLoadState: document.getElementById('cpu-load-state'),
-        cpuCoresCount: document.getElementById('cpu-cores-count'),
-        cpuThreadsCount: document.getElementById('cpu-threads-count'),
-        cpuFreqLabel: document.getElementById('cpu-freq-label'),
-        coreMatrixGrid: document.getElementById('core-matrix-grid'),
-        cpuSparklineLine: document.getElementById('cpu-sparkline-line'),
-        cpuSparklineArea: document.getElementById('cpu-sparkline-area'),
-
-        // Telemetry: Memory
-        cardMemory: document.getElementById('card-memory'),
-        memIndicatorDot: document.getElementById('mem-indicator-dot'),
-        memStatusBadge: document.getElementById('mem-status-badge'),
-        memPercentVal: document.getElementById('mem-percent-val'),
-        memUsedMb: document.getElementById('mem-used-mb'),
-        memTotalMb: document.getElementById('mem-total-mb'),
-        memAvailMb: document.getElementById('mem-avail-mb'),
-        memProgressBar: document.getElementById('mem-progress-bar'),
-        memThresholdText: document.getElementById('mem-threshold-text'),
-        memSwapVal: document.getElementById('mem-swap-val'),
-        memCacheVal: document.getElementById('mem-cache-val'),
-
-        // Telemetry: Storage
-        cardStorage: document.getElementById('card-storage'),
-        storagePercentVal: document.getElementById('storage-percent-val'),
-        storageUsedGb: document.getElementById('storage-used-gb'),
-        storageTotalGb: document.getElementById('storage-total-gb'),
-        storageFreeGb: document.getElementById('storage-free-gb'),
-        storageProgressBar: document.getElementById('storage-progress-bar'),
-        diskReadVal: document.getElementById('disk-read-val'),
-        diskWriteVal: document.getElementById('disk-write-val'),
-        diskInodesVal: document.getElementById('disk-inodes-val'),
-
-        // Telemetry: Network
-        cardNetwork: document.getElementById('card-network'),
-        netRxRate: document.getElementById('net-rx-rate'),
-        netTxRate: document.getElementById('net-tx-rate'),
-        netRxPktsRate: document.getElementById('net-rx-pkts-rate'),
-        netTxPktsRate: document.getElementById('net-tx-pkts-rate'),
-        netTotalRx: document.getElementById('net-total-rx'),
-        netTotalTx: document.getElementById('net-total-tx'),
-        netSparklineRx: document.getElementById('net-sparkline-rx'),
-        netSparklineTx: document.getElementById('net-sparkline-tx'),
-
-        // Terminal Log
-        terminalFeed: document.getElementById('terminal-feed'),
-        crtContainer: document.getElementById('crt-container'),
-        logCountBadge: document.getElementById('log-count-badge'),
-        btnCrtFx: document.getElementById('btn-crt-fx'),
-        btnAutoscroll: document.getElementById('btn-autoscroll'),
-        btnClearLogs: document.getElementById('btn-clear-logs'),
-        btnExportLogs: document.getElementById('btn-export-logs'),
-
-        // Remediation Console
-        remediationForm: document.getElementById('remediation-form'),
-        targetInput: document.getElementById('target-input'),
-        actionSelect: document.getElementById('action-select'),
-        reasonInput: document.getElementById('reason-input'),
-        btnDispatch: document.getElementById('btn-dispatch-remediation'),
-        dispatchSpinner: document.getElementById('dispatch-spinner'),
-        dispatchLabel: document.getElementById('dispatch-label'),
-        auditStatusBadge: document.getElementById('audit-status-badge'),
-        auditLatencyBadge: document.getElementById('audit-latency-badge'),
-        auditJsonViewer: document.getElementById('audit-json-viewer'),
-        btnCopyAudit: document.getElementById('btn-copy-audit'),
-        blastRadiusVal: document.getElementById('blast-radius-val'),
-        auditHashVal: document.getElementById('audit-hash-val'),
-
-        // Footer & Config
-        footerApiTarget: document.getElementById('footer-api-target'),
-        footerIops: document.getElementById('footer-iops'),
-        configModal: document.getElementById('config-modal'),
-        btnCloseModal: document.getElementById('btn-close-modal'),
-        btnSaveCfg: document.getElementById('btn-save-cfg'),
-        btnResetCfg: document.getElementById('btn-reset-cfg'),
-        cfgApiUrl: document.getElementById('cfg-api-url'),
-        cfgHealthInterval: document.getElementById('cfg-health-interval'),
-        cfgTelemetryInterval: document.getElementById('cfg-telemetry-interval')
-      };
-
-      // -------------------------------------------------------------
-      // CORE UTILITIES
-      // -------------------------------------------------------------
-      function getMicrosecondTimestamp() {
-        const now = new Date();
-        const iso = now.toISOString(); // e.g. 2026-10-09T23:14:02.123Z
-        const micros = String(Math.floor(Math.random() * 900 + 100));
-        return iso.replace('Z', micros + 'Z');
+    // Telemetry Polling (Tab 1)
+    async function updateTelemetry() {
+      try {
+        const res = await fetch('/telemetry');
+        if (!res.ok) return;
+        const data = await res.json();
+        document.getElementById('cpu-pct').innerText = `${data.cpu.percent}%`;
+        document.getElementById('cpu-cores').innerText = `${data.cpu.logical_cores || 8} Logical Threads`;
+        document.getElementById('ram-pct').innerText = `${data.memory.percent}%`;
+        document.getElementById('ram-usage').innerText = `${data.memory.used_mb} / ${data.memory.total_mb} MB`;
+        document.getElementById('storage-pct').innerText = `${data.disk.percent}%`;
+        document.getElementById('storage-usage').innerText = `${data.disk.used_gb} / ${data.disk.total_gb} GB`;
+        document.getElementById('net-rx').innerText = `${data.network.rx_rate_kb_s} KB/s`;
+        document.getElementById('net-tx').innerText = `TX: ${data.network.tx_rate_kb_s} KB/s`;
+      } catch (e) {
+        console.error("Telemetry error", e);
       }
+    }
+    setInterval(updateTelemetry, 2500);
+    updateTelemetry();
 
-      function formatBytes(bytes) {
-        if (!bytes || bytes <= 0) return '0 B';
-        const k = 1024;
-        const sizes = ['B', 'KB', 'MB', 'GB', 'TB'];
-        const i = Math.floor(Math.log(bytes) / Math.log(k));
-        return parseFloat((bytes / Math.pow(k, i)).toFixed(1)) + ' ' + sizes[i];
-      }
+    // Helper: Format bytes to MB/GB
+    function formatBytes(bytes) {
+      if (!bytes || bytes === 0) return '0 MB';
+      const mb = bytes / (1024 * 1024);
+      if (mb >= 1024) return (mb / 1024).toFixed(1) + ' GB';
+      return mb.toFixed(0) + ' MB';
+    }
 
-      function formatNumber(num) {
-        return new Intl.NumberFormat().format(Math.floor(num));
-      }
+    // Load Proxmox Live Resources (Tab 2)
+    async function loadResources() {
+      const tbody = document.getElementById('resources-body');
+      try {
+        const res = await fetch('/proxmox/resources');
+        const data = await res.json();
+        currentResources = Array.isArray(data) ? data : [];
 
-      function readFiniteNumber(...values) {
-        for (const value of values) {
-          if (value !== null && value !== undefined && value !== '' && Number.isFinite(Number(value))) {
-            return Number(value);
-          }
-        }
-        return null;
-      }
-
-      // -------------------------------------------------------------
-      // MOCK DATA SYNTHESIZER (Seamless Fallback Engine)
-      // -------------------------------------------------------------
-      function generateMockTelemetry() {
-        STATE.mockPhase += 0.15;
-        const isSpike = STATE.spikeTestActive && Date.now() < STATE.spikeTestEndTime;
-        if (STATE.spikeTestActive && Date.now() >= STATE.spikeTestEndTime) {
-          STATE.spikeTestActive = false;
-          appendLog('WARN', 'secops.spike_test', 'Synthetic spike test concluded. Telemetry parameters returning to baseline.');
-        }
-
-        // Oscillating CPU (30% to 75% normally, 92% during spike)
-        let cpuPercent;
-        if (isSpike) {
-          cpuPercent = 91.5 + Math.random() * 4.5; // >90% crimson threshold
-        } else {
-          const sineWave = Math.sin(STATE.mockPhase) * 22;
-          const noise = (Math.random() - 0.5) * 8;
-          cpuPercent = Math.min(99.0, Math.max(12.0, 42.0 + sineWave + noise));
-        }
-
-        // Oscillating Memory MB (Normally 60%-75%, >84% or >92% during spike)
-        let memPercent;
-        if (isSpike) {
-          memPercent = 93.2 + Math.random() * 3.5;
-        } else {
-          const memSine = Math.cos(STATE.mockPhase * 0.7) * 14;
-          memPercent = Math.min(98.0, Math.max(45.0, 64.0 + memSine + (Math.random() * 4)));
-        }
-
-        const memUsedMb = Math.round((memPercent / 100) * STATE.mockTotalMemMb);
-        const memAvailMb = STATE.mockTotalMemMb - memUsedMb;
-
-        // Storage (/dev/nvme0n1p2)
-        const storagePercent = parseFloat(((STATE.mockStorageUsedGb / STATE.mockTotalStorageGb) * 100).toFixed(1));
-        const storageFreeGb = parseFloat((STATE.mockTotalStorageGb - STATE.mockStorageUsedGb).toFixed(1));
-
-        // Network I/O stream accumulation
-        const rxDeltaBytes = Math.floor(1800000 + Math.sin(STATE.mockPhase * 1.5) * 900000 + (Math.random() * 400000));
-        const txDeltaBytes = Math.floor(820000 + Math.cos(STATE.mockPhase * 1.2) * 400000 + (Math.random() * 200000));
-        const rxDeltaPkts = Math.floor(rxDeltaBytes / 1200);
-        const txDeltaPkts = Math.floor(txDeltaBytes / 1100);
-
-        STATE.mockRxCumulative += rxDeltaBytes;
-        STATE.mockTxCumulative += txDeltaBytes;
-        STATE.mockRxPkts += rxDeltaPkts;
-        STATE.mockTxPkts += txDeltaPkts;
-
-        const rxRateKbS = (rxDeltaBytes / 1024 / 2).toFixed(1);
-        const txRateKbS = (txDeltaBytes / 1024 / 2).toFixed(1);
-
-        // Core Load breakdown array (16 cores)
-        const coreLoads = [];
-        for (let i = 0; i < STATE.mockCoresCount; i++) {
-          const coreVar = (Math.sin(STATE.mockPhase + i * 0.6) * 25) + (Math.random() * 15);
-          const coreVal = isSpike 
-            ? Math.min(99, Math.max(85, cpuPercent + (Math.random() - 0.5) * 10)) 
-            : Math.min(98, Math.max(10, cpuPercent + coreVar));
-          coreLoads.push(parseFloat(coreVal.toFixed(1)));
-        }
-
-        return {
-          cpu: {
-            percent: parseFloat(cpuPercent.toFixed(1)),
-            logical_cores: STATE.mockCoresCount,
-            load_avg: [
-              (cpuPercent / 20).toFixed(2),
-              ((cpuPercent * 0.9) / 20).toFixed(2),
-              ((cpuPercent * 0.8) / 20).toFixed(2)
-            ],
-            cores: coreLoads,
-            frequency_ghz: (4.20 + (Math.random() * 0.4)).toFixed(2)
-          },
-          memory: {
-            total_mb: STATE.mockTotalMemMb,
-            used_mb: memUsedMb,
-            available_mb: memAvailMb,
-            percent: parseFloat(memPercent.toFixed(1)),
-            swap_total_mb: 8192,
-            swap_used_mb: Math.floor(480 + (isSpike ? 2400 : Math.random() * 80)),
-            buffer_cache_mb: 6144
-          },
-          storage: {
-            mount: "/",
-            total_gb: STATE.mockTotalStorageGb,
-            used_gb: STATE.mockStorageUsedGb,
-            available_gb: storageFreeGb,
-            percent: storagePercent,
-            read_mb_s: (18.4 + Math.random() * 12.0).toFixed(1),
-            write_mb_s: (9.2 + Math.random() * 8.0).toFixed(1),
-            inodes_percent: 28.4
-          },
-          network: {
-            interface: "eth0",
-            bytes_sent: STATE.mockTxCumulative,
-            bytes_recv: STATE.mockRxCumulative,
-            packets_sent: STATE.mockTxPkts,
-            packets_recv: STATE.mockRxPkts,
-            tx_rate_kb_s: parseFloat(txRateKbS),
-            rx_rate_kb_s: parseFloat(rxRateKbS),
-            drop_in: 0,
-            drop_out: 0
-          },
-          timestamp: getMicrosecondTimestamp()
-        };
-      }
-
-      // -------------------------------------------------------------
-      // HEALTH CHECK ENGINE (GET /health every 5s)
-      // -------------------------------------------------------------
-      async function pollHealth() {
-        if (!STATE.isPollingActive && CONFIG.forcedMode !== 'AUTO') return;
-
-        // If forced to Mock mode, bypass real fetch
-        if (CONFIG.forcedMode === 'MOCK') {
-          setHealthStatus(false, 'MOCK (FORCED)', '0ms', true);
+        if (currentResources.length === 0) {
+          tbody.innerHTML = `<tr><td colspan="8" class="text-center py-8 text-slate-500">No instances found in the cluster.</td></tr>`;
           return;
         }
 
-        const endpoint = getApiUrl('/health');
-        const startTime = performance.now();
-        const controller = new AbortController();
-        const timeoutId = setTimeout(() => controller.abort(), 2800);
+        tbody.innerHTML = currentResources.map(item => {
+          const isRunning = item.status === 'running';
+          const maxMem = formatBytes(item.memory_max_bytes);
+          const usedMem = formatBytes(item.memory_used_bytes);
+          const memStr = isRunning ? `${usedMem} / ${maxMem}` : maxMem;
+          const ipList = (item.ips && item.ips.length > 0) ? item.ips.join(', ') : '-';
 
-        try {
-          const res = await fetch(endpoint, {
-            method: 'GET',
-            headers: { 'Accept': 'application/json' },
-            signal: controller.signal
-          });
-          clearTimeout(timeoutId);
-
-          const latencyMs = Math.round(performance.now() - startTime);
-
-          if (res.ok) {
-            STATE.isBackendOnline = true;
-            STATE.consecutiveFailures = 0;
-            setHealthStatus(true, 'ONLINE', `${latencyMs}ms`, false);
-          } else {
-            throw new Error(`HTTP ${res.status}`);
-          }
-        } catch (err) {
-          clearTimeout(timeoutId);
-          STATE.isBackendOnline = false;
-          STATE.consecutiveFailures++;
-          
-          const isTimeout = err.name === 'AbortError';
-          const label = isTimeout ? 'TIMEOUT' : 'OFFLINE';
-          setHealthStatus(false, label, '--ms', true);
-
-          if (STATE.consecutiveFailures === 1) {
-            appendLog('WARN', 'bridge.link', `API backend unreachable at ${endpoint}. Fallback mock engine engaged.`);
-          }
-        }
-      }
-
-      function setHealthStatus(isOnline, statusText, latencyStr, isFallback) {
-        if (isOnline) {
-          DOM.linkStatusBadge.className = 'flex items-center gap-1.5 font-bold tracking-wider text-emerald-400';
-          DOM.linkStatusBadge.innerHTML = `
-            <span class="w-2 h-2 rounded-full bg-emerald-400 pulse-beacon"></span>
-            <span>${statusText}</span>
+          return `
+            <tr class="hover:bg-slate-800/40 transition">
+              <td class="px-5 py-3.5 mono text-slate-400 font-medium">${item.vmid}</td>
+              <td class="px-5 py-3.5 font-semibold text-slate-200">${item.name}</td>
+              <td class="px-5 py-3.5 mono uppercase text-xs">
+                <span class="px-2 py-0.5 rounded ${item.type === 'VM' ? 'bg-indigo-950 text-indigo-400 border border-indigo-800' : 'bg-cyan-950 text-cyan-400 border border-cyan-800'}">
+                  ${item.type}
+                </span>
+              </td>
+              <td class="px-5 py-3.5">
+                <span class="px-2 py-0.5 rounded text-xs mono ${isRunning ? 'bg-emerald-950 text-emerald-400 border border-emerald-800' : 'bg-slate-800 text-slate-400 border border-slate-700'}">
+                  ${item.status}
+                </span>
+              </td>
+              <td class="px-5 py-3.5 mono text-xs">${isRunning ? `${item.cpu_percent || 0}%` : '-'}</td>
+              <td class="px-5 py-3.5 mono text-xs">${memStr}</td>
+              <td class="px-5 py-3.5 mono text-xs text-slate-400">${ipList}</td>
+              <td class="px-5 py-3.5 text-right">
+                ${isRunning ? 
+                  `<button onclick="triggerPowerAction(${item.vmid}, 'shutdown')" class="px-2.5 py-1 bg-rose-950/80 hover:bg-rose-900 text-rose-300 text-xs rounded border border-rose-800 mono transition">STOP</button>` : 
+                  `<button onclick="triggerPowerAction(${item.vmid}, 'start')" class="px-2.5 py-1 bg-emerald-950/80 hover:bg-emerald-900 text-emerald-300 text-xs rounded border border-emerald-800 mono transition">START</button>`
+                }
+              </td>
+            </tr>
           `;
-          DOM.linkLatency.textContent = latencyStr;
-          DOM.dataModeBadge.className = 'text-[11px] font-bold px-1.5 py-0.5 bg-emerald-950/80 text-emerald-400 border border-emerald-800 uppercase glow-green';
-          DOM.dataModeBadge.textContent = 'LIVE API (BACKEND)';
-        } else {
-          DOM.linkStatusBadge.className = 'flex items-center gap-1.5 font-bold tracking-wider text-rose-400';
-          DOM.linkStatusBadge.innerHTML = `
-            <span class="w-2 h-2 rounded-full bg-rose-500 animate-ping"></span>
-            <span>${statusText}</span>
+        }).join('');
+      } catch (e) {
+        tbody.innerHTML = `<tr><td colspan="8" class="text-center py-8 text-rose-400">Error retrieving the Proxmox inventory.</td></tr>`;
+      }
+    }
+
+    // Trigger Power Actions (START / STOP)
+    async function triggerPowerAction(vmid, action) {
+      if (!confirm(`Confirm tactical command: ${action.toUpperCase()} for VMID ${vmid}?`)) return;
+      try {
+        const res = await fetch('/proxmox/power', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ vmid: vmid, action: action })
+        });
+        const data = await res.json();
+        alert(data.message || `Action sent successfully.`);
+        setTimeout(loadResources, 2000);
+      } catch (e) {
+        alert(`Error dispatching action: ${e}`);
+      }
+    }
+
+    // AI Chat Submission (Tab 3)
+    async function handleSendAI(e) {
+      e.preventDefault();
+      const input = document.getElementById('ai-input');
+      const box = document.getElementById('chat-box');
+      const msg = input.value.trim();
+      if (!msg) return;
+
+      input.value = '';
+      box.innerHTML += `
+        <div class="p-3 bg-purple-950/30 border border-purple-800/50 rounded-lg text-slate-200">
+          <strong class="text-purple-300">Andrei:</strong> ${msg}
+        </div>
+      `;
+      box.scrollTop = box.scrollHeight;
+
+      try {
+        const res = await fetch('/ai/chat', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ message: msg })
+        });
+        const data = await res.json();
+        
+        let actionBadge = '';
+        if (data.suggested_action) {
+          actionBadge = `
+            <div class="mt-2 p-2 bg-black/60 rounded border border-slate-800 text-emerald-400 mono text-[11px]">
+              # Proposed action / command:<br><code>${data.suggested_action}</code>
+            </div>
           `;
-          DOM.linkLatency.textContent = latencyStr;
-          DOM.dataModeBadge.className = 'text-[11px] font-bold px-1.5 py-0.5 bg-amber-950/80 text-amber-300 border border-amber-800 uppercase glow-amber';
-          DOM.dataModeBadge.textContent = 'SIMULATED MOCK ENGINE';
-        }
-      }
-
-      // -------------------------------------------------------------
-      // TELEMETRY ENGINE (GET /telemetry every 2s)
-      // -------------------------------------------------------------
-      async function pollTelemetry() {
-        if (!STATE.isPollingActive) return;
-
-        let telemetryData = null;
-
-        // If backend is deemed online and not forced mock:
-        if (STATE.isBackendOnline && CONFIG.forcedMode !== 'MOCK') {
-          const controller = new AbortController();
-          const timeoutId = setTimeout(() => controller.abort(), 1900);
-
-          try {
-            const res = await fetch(getApiUrl('/telemetry'), {
-              method: 'GET',
-              headers: { 'Accept': 'application/json' },
-              signal: controller.signal
-            });
-            clearTimeout(timeoutId);
-
-            if (res.ok) {
-              telemetryData = await res.json();
-            } else {
-              throw new Error(`Telemetry HTTP ${res.status}`);
-            }
-          } catch (e) {
-            clearTimeout(timeoutId);
-            // Fallback immediately to mock telemetry on error
-            telemetryData = generateMockTelemetry();
-          }
-        } else {
-          // Fallback mock mode
-          telemetryData = generateMockTelemetry();
         }
 
-        renderTelemetry(telemetryData);
-      }
-
-      // -------------------------------------------------------------
-      // TELEMETRY RENDERER
-      // -------------------------------------------------------------
-      function renderTelemetry(data) {
-        if (!data) return;
-
-        // 1. CPU RENDER
-        const cpu = data.cpu || {};
-        const cpuPct = readFiniteNumber(cpu.percent) ?? 0;
-        DOM.cpuPercentVal.innerHTML = `${cpuPct.toFixed(1)}<span class="text-base font-normal text-slate-500">%</span>`;
-        const coreLoads = Array.isArray(cpu.cores) ? cpu.cores : [];
-        const logicalCores = readFiniteNumber(cpu.logical_cores) ?? (coreLoads.length || null);
-        DOM.cpuCoresCount.textContent = logicalCores === null ? '-- CORES' : `${logicalCores} CORES`;
-        DOM.cpuThreadsCount.textContent = logicalCores === null ? '-- LOGICAL THREADS' : `${logicalCores} LOGICAL THREADS`;
-        if (cpu.frequency_ghz !== undefined && cpu.frequency_ghz !== null) {
-          DOM.cpuFreqLabel.textContent = `CLOCK: ${cpu.frequency_ghz} GHz`;
-        }
-
-        // CPU Status Badge & Threshold Colors
-        if (cpuPct >= 90) {
-          DOM.cardCpu.classList.add('hud-card-alert');
-          DOM.cpuPercentVal.className = 'text-3xl font-black font-mono tracking-tight text-rose-500 glow-crimson animate-pulse';
-          DOM.cpuLoadState.className = 'text-[10px] font-bold px-1.5 py-0.2 bg-rose-950 text-rose-400 border border-rose-800';
-          DOM.cpuLoadState.textContent = 'CRITICAL OVERLOAD';
-        } else if (cpuPct >= 80) {
-          DOM.cardCpu.classList.remove('hud-card-alert');
-          DOM.cpuPercentVal.className = 'text-3xl font-black font-mono tracking-tight text-amber-400 glow-amber';
-          DOM.cpuLoadState.className = 'text-[10px] font-bold px-1.5 py-0.2 bg-amber-950 text-amber-400 border border-amber-800';
-          DOM.cpuLoadState.textContent = 'ELEVATED LOAD';
-        } else {
-          DOM.cardCpu.classList.remove('hud-card-alert');
-          DOM.cpuPercentVal.className = 'text-3xl font-black font-mono tracking-tight text-emerald-400';
-          DOM.cpuLoadState.className = 'text-[10px] font-bold px-1.5 py-0.2 bg-emerald-950 text-emerald-400 border border-emerald-800';
-          DOM.cpuLoadState.textContent = 'NOMINAL';
-        }
-
-        // CPU Sparkline
-        STATE.cpuHistory.shift();
-        STATE.cpuHistory.push(cpuPct);
-        drawSparkline(STATE.cpuHistory, DOM.cpuSparklineLine, DOM.cpuSparklineArea, 100);
-
-        // Core Matrix Bars
-        renderCoreMatrix(coreLoads);
-
-        // 2. MEMORY RENDER (Threshold Color Shifts >80% amber, >90% crimson)
-        const memPct = data.memory.percent || ((data.memory.used_mb / data.memory.total_mb) * 100);
-        DOM.memPercentVal.innerHTML = `${memPct.toFixed(1)}<span class="text-base font-normal text-slate-500">%</span>`;
-        DOM.memUsedMb.textContent = formatNumber(data.memory.used_mb);
-        DOM.memTotalMb.textContent = formatNumber(data.memory.total_mb);
-        DOM.memAvailMb.textContent = formatNumber(data.memory.available_mb);
-        DOM.memProgressBar.style.width = `${Math.min(100, Math.max(0, memPct))}%`;
-
-        if (data.memory.swap_used_mb !== undefined) {
-          DOM.memSwapVal.textContent = `${data.memory.swap_used_mb} / ${data.memory.swap_total_mb || 8192} MB`;
-        }
-        if (data.memory.buffer_cache_mb) {
-          DOM.memCacheVal.textContent = `${formatNumber(data.memory.buffer_cache_mb)} MB`;
-        }
-
-        // Color shifts and status indicator for Memory
-        if (memPct >= 90) {
-          DOM.cardMemory.classList.add('hud-card-alert');
-          DOM.memPercentVal.className = 'text-3xl font-black font-mono tracking-tight text-rose-500 glow-crimson animate-pulse';
-          DOM.memProgressBar.className = 'h-full bg-rose-500 glow-crimson transition-all duration-300';
-          DOM.memIndicatorDot.className = 'w-2 h-2 bg-rose-500 animate-ping';
-          DOM.memStatusBadge.className = 'text-[10px] font-bold px-1.5 py-0.2 bg-rose-950 text-rose-300 border border-rose-800';
-          DOM.memStatusBadge.textContent = 'CRITICAL // >90%';
-          DOM.memThresholdText.textContent = 'THRESHOLD: CRITICAL SPIKE (>90%)';
-          DOM.memThresholdText.className = 'text-rose-400 font-bold';
-        } else if (memPct >= 80) {
-          DOM.cardMemory.classList.remove('hud-card-alert');
-          DOM.memPercentVal.className = 'text-3xl font-black font-mono tracking-tight text-amber-400 glow-amber';
-          DOM.memProgressBar.className = 'h-full bg-amber-400 glow-amber transition-all duration-300';
-          DOM.memIndicatorDot.className = 'w-2 h-2 bg-amber-400';
-          DOM.memStatusBadge.className = 'text-[10px] font-bold px-1.5 py-0.2 bg-amber-950 text-amber-400 border border-amber-800';
-          DOM.memStatusBadge.textContent = 'WARNING // >80%';
-          DOM.memThresholdText.textContent = 'THRESHOLD: ELEVATED (>80%)';
-          DOM.memThresholdText.className = 'text-amber-400 font-bold';
-        } else {
-          DOM.cardMemory.classList.remove('hud-card-alert');
-          DOM.memPercentVal.className = 'text-3xl font-black font-mono tracking-tight text-cyan-400';
-          DOM.memProgressBar.className = 'h-full bg-cyan-400 transition-all duration-300';
-          DOM.memIndicatorDot.className = 'w-2 h-2 bg-cyan-400';
-          DOM.memStatusBadge.className = 'text-[10px] font-bold px-1.5 py-0.2 bg-cyan-950 text-cyan-400 border border-cyan-800';
-          DOM.memStatusBadge.textContent = 'HEALTHY';
-          DOM.memThresholdText.textContent = 'THRESHOLD: < 80% NOMINAL';
-          DOM.memThresholdText.className = 'text-slate-400';
-        }
-
-        // 3. STORAGE RENDER (Root /)
-        const storage = data.disk || data.storage || {};
-        const totalBytes = readFiniteNumber(storage.total_bytes, storage.totalBytes);
-        const usedBytes = readFiniteNumber(storage.used_bytes, storage.usedBytes);
-        const freeBytes = readFiniteNumber(storage.available_bytes, storage.free_bytes, storage.availableBytes, storage.freeBytes);
-        const totalGb = readFiniteNumber(storage.total_gb, storage.totalGb)
-          ?? (totalBytes === null ? null : totalBytes / (1024 ** 3));
-        const usedGb = readFiniteNumber(storage.used_gb, storage.usedGb)
-          ?? (usedBytes === null ? null : usedBytes / (1024 ** 3));
-        const freeGb = readFiniteNumber(storage.available_gb, storage.free_gb, storage.availableGb, storage.freeGb)
-          ?? (freeBytes === null ? null : freeBytes / (1024 ** 3))
-          ?? (totalGb !== null && usedGb !== null ? totalGb - usedGb : null);
-        const storagePct = readFiniteNumber(storage.percent, storage.used_percent, storage.usage_percent)
-          ?? (usedGb !== null && totalGb > 0 ? (usedGb / totalGb) * 100 : null);
-        DOM.storagePercentVal.innerHTML = `${storagePct === null ? '--' : storagePct.toFixed(1)}<span class="text-base font-normal text-slate-500">%</span>`;
-        DOM.storageUsedGb.textContent = usedGb === null ? '--' : usedGb.toFixed(1);
-        DOM.storageTotalGb.textContent = totalGb === null ? '--' : totalGb.toFixed(1);
-        DOM.storageFreeGb.textContent = freeGb === null ? '--' : freeGb.toFixed(1);
-        DOM.storageProgressBar.style.width = `${storagePct === null ? 0 : Math.min(100, Math.max(0, storagePct))}%`;
-        
-        const readRate = storage.read_mb_s ?? storage.read_rate_mb_s;
-        const writeRate = storage.write_mb_s ?? storage.write_rate_mb_s;
-        if (readRate !== undefined || writeRate !== undefined) {
-          DOM.diskReadVal.textContent = readRate === undefined ? '-- MB/s' : `${readRate} MB/s`;
-          DOM.diskWriteVal.textContent = writeRate === undefined ? '-- MB/s' : `${writeRate} MB/s`;
-        }
-
-        if (data.node !== undefined && data.node !== null) {
-          const nodeIdentity = typeof data.node === 'string'
-            ? data.node
-            : data.node.name ?? data.node.node_id ?? data.node.id ?? data.node.hostname;
-          if (nodeIdentity !== undefined && nodeIdentity !== null && String(nodeIdentity).trim()) {
-            DOM.hostNodeIdentity.textContent = String(nodeIdentity);
-          }
-        }
-
-        // 4. NETWORK RENDER
-        const net = data.network;
-        DOM.netTotalRx.textContent = `${formatBytes(net.bytes_recv)} (${formatNumber(net.packets_recv)} pkts)`;
-        DOM.netTotalTx.textContent = `${formatBytes(net.bytes_sent)} (${formatNumber(net.packets_sent)} pkts)`;
-
-        const rxRateKb = net.rx_rate_kb_s !== undefined ? net.rx_rate_kb_s : 0;
-        const txRateKb = net.tx_rate_kb_s !== undefined ? net.tx_rate_kb_s : 0;
-
-        DOM.netRxRate.textContent = rxRateKb >= 1024 
-          ? `${(rxRateKb / 1024).toFixed(2)} MB/s` 
-          : `${rxRateKb.toFixed(1)} KB/s`;
-        DOM.netTxRate.textContent = txRateKb >= 1024 
-          ? `${(txRateKb / 1024).toFixed(2)} MB/s` 
-          : `${txRateKb.toFixed(1)} KB/s`;
-
-        DOM.netRxPktsRate.textContent = `${formatNumber(rxRateKb * 1.2)} pps`;
-        DOM.netTxPktsRate.textContent = `${formatNumber(txRateKb * 1.1)} pps`;
-
-        // Network sparklines
-        STATE.netRxHistory.shift();
-        STATE.netRxHistory.push(rxRateKb);
-        STATE.netTxHistory.shift();
-        STATE.netTxHistory.push(txRateKb);
-        
-        const maxNet = Math.max(100, ...STATE.netRxHistory, ...STATE.netTxHistory);
-        drawSingleLine(STATE.netRxHistory, DOM.netSparklineRx, maxNet);
-        drawSingleLine(STATE.netTxHistory, DOM.netSparklineTx, maxNet);
-      }
-
-      function renderCoreMatrix(cores) {
-        if (!Array.isArray(cores)) return;
-        DOM.coreMatrixGrid.innerHTML = '';
-        DOM.coreMatrixGrid.style.gridTemplateColumns = cores.length
-          ? `repeat(${Math.min(8, cores.length)}, minmax(0, 1fr))`
-          : '';
-        cores.forEach((load, idx) => {
-          const loadPercent = readFiniteNumber(
-            typeof load === 'object' && load !== null ? load.percent : load
-          ) ?? 0;
-          const col = document.createElement('div');
-          col.className = 'h-full bg-slate-900 border border-slate-800 flex flex-col justify-end overflow-hidden';
-          col.title = `Core #${idx}: ${loadPercent}%`;
-          
-          const bar = document.createElement('div');
-          bar.className = 'w-full transition-all duration-300';
-          bar.style.height = `${Math.min(100, Math.max(0, loadPercent))}%`;
-          
-          if (loadPercent >= 90) {
-            bar.className += ' bg-rose-500';
-          } else if (loadPercent >= 80) {
-            bar.className += ' bg-amber-400';
-          } else {
-            bar.className += ' bg-emerald-400';
-          }
-
-          col.appendChild(bar);
-          DOM.coreMatrixGrid.appendChild(col);
-        });
-      }
-
-      // Sparkline SVG renderer
-      function drawSparkline(values, lineEl, areaEl, maxVal) {
-        const w = 200;
-        const h = 40;
-        const pts = values.map((val, i) => {
-          const x = (i / (values.length - 1)) * w;
-          const y = h - ((Math.min(maxVal, val) / maxVal) * (h - 4)) - 2;
-          return { x, y };
-        });
-
-        const lineD = pts.map((p, i) => `${i === 0 ? 'M' : 'L'} ${p.x.toFixed(1)},${p.y.toFixed(1)}`).join(' ');
-        lineEl.setAttribute('d', lineD);
-
-        if (areaEl) {
-          const areaD = `${lineD} L ${w},${h} L 0,${h} Z`;
-          areaEl.setAttribute('d', areaD);
-        }
-      }
-
-      function drawSingleLine(values, lineEl, maxVal) {
-        const w = 200;
-        const h = 40;
-        const pts = values.map((val, i) => {
-          const x = (i / (values.length - 1)) * w;
-          const y = h - ((Math.min(maxVal, val) / maxVal) * (h - 4)) - 2;
-          return { x, y };
-        });
-        const lineD = pts.map((p, i) => `${i === 0 ? 'M' : 'L'} ${p.x.toFixed(1)},${p.y.toFixed(1)}`).join(' ');
-        lineEl.setAttribute('d', lineD);
-      }
-
-      // -------------------------------------------------------------
-      // CRT TERMINAL LOG MODULE
-      // -------------------------------------------------------------
-      function appendLog(level, subsystem, message) {
-        const logEntry = {
-          id: 'log-' + Math.random().toString(36).substr(2, 9),
-          timestamp: getMicrosecondTimestamp(),
-          level: level.toUpperCase(),
-          subsystem,
-          message
-        };
-
-        STATE.logs.push(logEntry);
-        if (STATE.logs.length > CONFIG.maxLogEvents) {
-          STATE.logs.shift();
-        }
-
-        DOM.logCountBadge.textContent = `${STATE.logs.length} EVENTS`;
-
-        // Render line if matches current filter
-        if (STATE.activeLogFilter === 'ALL' || STATE.activeLogFilter === logEntry.level) {
-          renderLogLine(logEntry);
-        }
-      }
-
-      function renderLogLine(log) {
-        const row = document.createElement('div');
-        row.dataset.level = log.level;
-        row.className = 'font-mono text-[11px] leading-tight flex items-start gap-1.5 hover:bg-slate-900/60 py-0.5 px-1 border-l-2 transition-colors';
-
-        let badgeColor = 'text-cyan-400 border-cyan-800 bg-cyan-950/40';
-        let borderColor = 'border-slate-800';
-        let msgColor = 'text-slate-300';
-
-        switch (log.level) {
-          case 'CRIT':
-            badgeColor = 'text-rose-400 border-rose-800 bg-rose-950/80 font-bold';
-            borderColor = 'border-rose-500';
-            msgColor = 'text-rose-200 font-semibold';
-            break;
-          case 'WARN':
-            badgeColor = 'text-amber-400 border-amber-800 bg-amber-950/60';
-            borderColor = 'border-amber-500';
-            msgColor = 'text-amber-100';
-            break;
-          case 'SEC-OPS':
-            badgeColor = 'text-emerald-400 border-emerald-800 bg-emerald-950/60 font-bold';
-            borderColor = 'border-emerald-500';
-            msgColor = 'text-emerald-200';
-            break;
-          default:
-            badgeColor = 'text-cyan-400 border-cyan-800 bg-cyan-950/40';
-            borderColor = 'border-cyan-800';
-            msgColor = 'text-slate-300';
-        }
-
-        row.className += ` ${borderColor}`;
-
-        row.innerHTML = `
-          <span class="text-slate-400 text-[10px] select-none whitespace-nowrap">${log.timestamp}</span>
-          <span class="px-1 py-0 border text-[9px] font-bold ${badgeColor} whitespace-nowrap">[${log.level}]</span>
-          <span class="text-cyan-300 text-[10px] font-tech whitespace-nowrap">&lt;${log.subsystem}&gt;</span>
-          <span class="flex-grow ${msgColor} break-all select-text">${escapeHtml(log.message)}</span>
+        box.innerHTML += `
+          <div class="p-3 bg-slate-800/50 border border-slate-700/60 rounded-lg text-slate-300 space-y-1.5">
+            <div><strong class="text-purple-400">Jack (AI Copilot):</strong> ${data.reply}</div>
+            ${actionBadge}
+          </div>
         `;
-
-        DOM.terminalFeed.appendChild(row);
-
-        if (STATE.isAutoScrollPinned) {
-          DOM.terminalFeed.scrollTop = DOM.terminalFeed.scrollHeight;
-        }
+        box.scrollTop = box.scrollHeight;
+      } catch (e) {
+        box.innerHTML += `<div class="p-2 text-rose-400">Error connecting to the AI bridge.</div>`;
       }
+    }
 
-      function escapeHtml(str) {
-        return str
-          .replace(/&/g, '&amp;')
-          .replace(/</g, '&lt;')
-          .replace(/>/g, '&gt;')
-          .replace(/"/g, '&quot;')
-          .replace(/'/g, '&#039;');
-      }
-
-      function reRenderAllLogs() {
-        DOM.terminalFeed.innerHTML = '';
-        STATE.logs.forEach(log => {
-          if (STATE.activeLogFilter === 'ALL' || STATE.activeLogFilter === log.level) {
-            renderLogLine(log);
-          }
-        });
-      }
-
-      // Realistic background event generator (streams synthetic SecOps activities)
-      const MOCK_EVENTS_POOL = [
-        { lvl: 'INFO', sys: 'ebpf.sched', msg: 'Kernel context switch rate nominal (4.1k/s) across core cluster.' },
-        { lvl: 'INFO', sys: 'watchdog.c', msg: 'Hardware heartbeat acknowledged: no I/O starvation detected.' },
-        { lvl: 'SEC-OPS', sys: 'firewall.nft', msg: 'Ingress SYN flood filter: zero malformed handshakes dropped.' },
-        { lvl: 'INFO', sys: 'cgroup.v2', msg: 'Memory slab reclamation finished: 42.6 MB freed from inactive page cache.' },
-        { lvl: 'WARN', sys: 'mesh.ingress', msg: 'Route p99 latency spiked to 14.8ms on /api/v1/telemetry endpoint.' },
-        { lvl: 'INFO', sys: 'storage.nvme', msg: 'NVMe SMART self-test complete: Spare blocks 100%, Media errors: 0.' },
-        { lvl: 'SEC-OPS', sys: 'ebpf.audit', msg: 'AppArmor enforcement profile verify: 18 sandboxed harnesses verified.' },
-        { lvl: 'WARN', sys: 'kernel.oom', msg: 'Zone-0 HighMem threshold at 79.4%: initiating proactive slab shrink.' },
-        { lvl: 'INFO', sys: 'bgp.router', msg: 'Neighbor 10.244.0.1 (AS 65001) state ESTABLISHED, 142 prefixes active.' },
-        { lvl: 'CRIT', sys: 'thermal.soc', msg: 'Package thermal sensor peak 79.2C on Core #4: frequency governor nominal.' }
-      ];
-
-      function startMockLogStream() {
-        if (STATE.timers.mockLogStream) clearInterval(STATE.timers.mockLogStream);
-        
-        // Push initial boot banners
-        appendLog('SEC-OPS', 'bridge.init', 'Jack-OS Tactical Orchestration Bridge v2.4.9 initialized.');
-        appendLog('INFO', 'baremetal.harness', 'Hardware harness detected: THE-BANISHED [x86_64 Zen-4 16C/32T].');
-        appendLog('INFO', 'ebpf.probe', 'Tracing hooks loaded: 64 active kprobes attached to scheduler.');
-
-        STATE.timers.mockLogStream = setInterval(() => {
-          if (!STATE.isPollingActive) return;
-          const ev = MOCK_EVENTS_POOL[Math.floor(Math.random() * MOCK_EVENTS_POOL.length)];
-          // Only emit occasionally so terminal doesn't spam uncontrollably
-          if (Math.random() > 0.35) {
-            appendLog(ev.lvl, ev.sys, ev.msg);
-          }
-        }, 2400);
-      }
-
-      // -------------------------------------------------------------
-      // ACTION & DRY-RUN REMEDIATION CONSOLE
-      // -------------------------------------------------------------
-      DOM.remediationForm.addEventListener('submit', async (e) => {
-        e.preventDefault();
-
-        const target = DOM.targetInput.value.trim();
-        const action = DOM.actionSelect.value;
-        const reason = DOM.reasonInput.value.trim();
-
-        if (!target || !reason) {
-          alert('Both Target Subsystem and Audit Reason are required.');
-          return;
-        }
-
-        // Visual loading state
-        DOM.btnDispatch.disabled = true;
-        DOM.dispatchSpinner.classList.remove('hidden');
-        DOM.dispatchLabel.textContent = 'EXECUTING PROBE & AUDITING BLAST RADIUS...';
-        DOM.auditStatusBadge.textContent = 'DISPATCHING';
-        DOM.auditStatusBadge.className = 'text-[9px] px-1 bg-amber-950 text-amber-300 font-mono font-bold animate-pulse';
-
-        appendLog('SEC-OPS', 'remediate.exec', `Dispatching action probe: [${action}] against target '${target}'`);
-
-        const payload = {
-          target,
-          action,
-          reason,
-          timestamp: getMicrosecondTimestamp(),
-          operator: 'BANISHED-SEC-OPS-01',
-          dry_run: true
-        };
-
-        const endpoint = getApiUrl('/remediate/dry-run');
-        const startTime = performance.now();
-        let responseData = null;
-        let isSimulated = false;
-
-        try {
-          if (STATE.isBackendOnline && CONFIG.forcedMode !== 'MOCK') {
-            const controller = new AbortController();
-            const timeoutId = setTimeout(() => controller.abort(), 10000);
-
-            const res = await fetch(endpoint, {
-              method: 'POST',
-              headers: {
-                'Content-Type': 'application/json',
-                'Accept': 'application/json'
-              },
-              body: JSON.stringify(payload),
-              signal: controller.signal
-            });
-            clearTimeout(timeoutId);
-
-            if (!res.ok) {
-              throw new Error(`HTTP Error: ${res.status} ${res.statusText}`);
-            }
-            responseData = await res.json();
-          } else {
-            // Simulated Fallback Response
-            await new Promise(r => setTimeout(r, 450)); // Realistic network latency
-            isSimulated = true;
-            responseData = generateMockRemediationResponse(payload);
-          }
-        } catch (err) {
-          appendLog('WARN', 'remediate.fail', `POST ${endpoint} failed (${err.message}). Rendering simulated audit output.`);
-          isSimulated = true;
-          responseData = generateMockRemediationResponse(payload);
-        } finally {
-          const latencyMs = Math.round(performance.now() - startTime);
-
-          // Reset UI
-          DOM.btnDispatch.disabled = false;
-          DOM.dispatchSpinner.classList.add('hidden');
-          DOM.dispatchLabel.textContent = 'DISPATCH DRY-RUN PROBE [POST /remediate/dry-run]';
-
-          renderAuditResponse(responseData, latencyMs, isSimulated);
-        }
-      });
-
-      function generateMockRemediationResponse(req) {
-        const idHex = Math.random().toString(16).substr(2, 8).toUpperCase();
-        let blastScore = 0.04;
-        let blastRisk = 'MINIMAL_RISK';
-        
-        if (req.action === 'isolate') {
-          blastScore = 0.68;
-          blastRisk = 'ELEVATED_EGRESS_CUT';
-        } else if (req.action === 'soft-restart') {
-          blastScore = 0.22;
-          blastRisk = 'TRANSIENT_RECONNECT';
-        }
-
-        return {
-          status: "SIMULATED_ACCEPTED",
-          remediation_id: `DRY-RUN-${idHex}`,
-          dry_run: true,
-          target: req.target,
-          action: req.action,
-          reason: req.reason,
-          timestamp: getMicrosecondTimestamp(),
-          blast_radius_score: blastScore,
-          risk_assessment: blastRisk,
-          affected_nodes: ["the-banished-node-0", "the-banished-worker-1"],
-          estimated_downtime_ms: 0,
-          simulation_trace: [
-            `VALIDATION_STAGE: Operator '${req.operator}' authenticated via SecOps token.`,
-            `LOCK_STAGE: Resource mutex for '${req.target}' acquired in DRY_RUN mode.`,
-            `PROBE_STAGE: Validating cgroup slice and socket dependencies.`,
-            `ACTION_SIMULATION: Executed mock handler '${req.action}'.`,
-            `HEALTH_CHECK: 16/16 bare-metal resilience invariants preserved.`
-          ],
-          audit_signature: `sha256:${Array.from({length: 64}, () => Math.floor(Math.random()*16).toString(16)).join('')}`
-        };
-      }
-
-      function renderAuditResponse(data, latencyMs, isSimulated) {
-        DOM.auditStatusBadge.textContent = isSimulated ? 'SIMULATED (200 OK)' : 'COMMITTED (200 OK)';
-        DOM.auditStatusBadge.className = isSimulated 
-          ? 'text-[9px] px-1 bg-amber-950 text-amber-300 font-mono font-bold border border-amber-800'
-          : 'text-[9px] px-1 bg-emerald-950 text-emerald-400 font-mono font-bold border border-emerald-800 glow-green';
-        
-        DOM.auditLatencyBadge.textContent = `${latencyMs}ms`;
-
-        // Render JSON with syntax highlight
-        DOM.auditJsonViewer.innerHTML = syntaxHighlightJson(JSON.stringify(data, null, 2));
-
-        // Blast radius & hash
-        if (data.blast_radius_score !== undefined) {
-          DOM.blastRadiusVal.textContent = `${data.blast_radius_score} (${data.risk_assessment || 'NOMINAL'})`;
-          DOM.blastRadiusVal.className = data.blast_radius_score > 0.5 
-            ? 'text-rose-400 font-bold' 
-            : 'text-emerald-400 font-bold';
-        }
-        if (data.audit_signature) {
-          DOM.auditHashVal.textContent = data.audit_signature.substr(0, 18) + '...';
-        }
-
-        appendLog('SEC-OPS', 'remediate.audit', `Remediation probe completed (${latencyMs}ms). Blast score: ${data.blast_radius_score || 0}. Audit ID: ${data.remediation_id}`);
-      }
-
-      function syntaxHighlightJson(jsonStr) {
-        jsonStr = escapeHtml(jsonStr);
-        return jsonStr.replace(/("(\\u[a-zA-Z0-9]{4}|\\[^u]|[^\\"])*"(\s*:)?|\b(true|false|null)\b|-?\d+(?:\.\d*)?(?:[eE][+\-]?\d+)?)/g, (match) => {
-          let cls = 'text-amber-300'; // number
-          if (/^"/.test(match)) {
-            if (/:$/.test(match)) {
-              cls = 'text-cyan-400 font-bold'; // key
-            } else {
-              cls = 'text-emerald-300'; // string
-            }
-          } else if (/true|false/.test(match)) {
-            cls = 'text-rose-400 font-bold'; // boolean
-          } else if (/null/.test(match)) {
-            cls = 'text-slate-500';
-          }
-          return `<span class="${cls}">${match}</span>`;
-        });
-      }
-
-      // -------------------------------------------------------------
-      // EVENT LISTENERS & INTERACTIVE CONTROLS
-      // -------------------------------------------------------------
-      
-      // Target preset pills
-      document.querySelectorAll('.preset-pill').forEach(btn => {
-        btn.addEventListener('click', () => {
-          DOM.targetInput.value = btn.dataset.value;
-          DOM.targetInput.focus();
-        });
-      });
-
-      // Pause / Resume Polling
-      DOM.btnTogglePause.addEventListener('click', () => {
-        STATE.isPollingActive = !STATE.isPollingActive;
-        if (STATE.isPollingActive) {
-          DOM.pauseIndicator.className = 'w-1.5 h-1.5 bg-emerald-400 rounded-full';
-          DOM.pauseBtnText.textContent = 'POLL: ACTIVE';
-          DOM.btnTogglePause.classList.remove('bg-rose-950', 'border-rose-700');
-          appendLog('INFO', 'bridge.ctrl', 'Telemetry and health polling resumed by operator.');
-        } else {
-          DOM.pauseIndicator.className = 'w-1.5 h-1.5 bg-rose-500 rounded-full animate-ping';
-          DOM.pauseBtnText.textContent = 'POLL: PAUSED';
-          DOM.btnTogglePause.classList.add('bg-rose-950', 'border-rose-700');
-          appendLog('WARN', 'bridge.ctrl', 'Telemetry polling halted by operator.');
-        }
-      });
-
-      // Force Mode toggle (AUTO -> MOCK -> LIVE)
-      DOM.btnForceMode.addEventListener('click', () => {
-        if (CONFIG.forcedMode === 'AUTO') {
-          CONFIG.forcedMode = 'MOCK';
-          DOM.btnForceMode.textContent = 'MODE: MOCK';
-          DOM.btnForceMode.className = 'px-2 py-1.5 bg-amber-950/80 border border-amber-700 text-amber-300 font-mono text-[11px]';
-          appendLog('WARN', 'bridge.mode', 'Forced MOCK mode engaged by operator.');
-        } else if (CONFIG.forcedMode === 'MOCK') {
-          CONFIG.forcedMode = 'LIVE';
-          DOM.btnForceMode.textContent = 'MODE: LIVE';
-          DOM.btnForceMode.className = 'px-2 py-1.5 bg-emerald-950/80 border border-emerald-700 text-emerald-300 font-mono text-[11px]';
-          appendLog('INFO', 'bridge.mode', 'Forced LIVE API mode engaged by operator.');
-        } else {
-          CONFIG.forcedMode = 'AUTO';
-          DOM.btnForceMode.textContent = 'MODE TOGGLE';
-          DOM.btnForceMode.className = 'px-2 py-1.5 bg-slate-800 hover:bg-slate-700 border border-slate-600 text-slate-300 font-mono text-[11px]';
-          appendLog('INFO', 'bridge.mode', 'AUTO detection mode restored.');
-        }
-        pollHealth();
-      });
-
-      // Spike test button (Injects a momentary >90% spike to showcase threshold color shifts)
-      DOM.btnSpikeTest.addEventListener('click', () => {
-        STATE.spikeTestActive = true;
-        STATE.spikeTestEndTime = Date.now() + 6000; // 6 second spike
-        appendLog('CRIT', 'secops.spike_test', 'OPERATOR INJECTED SYNTHETIC LOAD SPIKE (>90%). Verifying threshold alert cascades.');
-        pollTelemetry();
-      });
-
-      // Log Filter Buttons
-      document.querySelectorAll('.log-filter-btn').forEach(btn => {
-        btn.addEventListener('click', () => {
-          document.querySelectorAll('.log-filter-btn').forEach(b => {
-            b.classList.remove('bg-slate-800', 'text-cyan-400', 'font-bold');
-            b.classList.add('text-slate-400');
-          });
-          btn.classList.remove('text-slate-400');
-          btn.classList.add('bg-slate-800', 'text-cyan-400', 'font-bold');
-
-          STATE.activeLogFilter = btn.dataset.filter;
-          reRenderAllLogs();
-        });
-      });
-
-      // CRT Scanline Toggle
-      DOM.btnCrtFx.addEventListener('click', () => {
-        STATE.isCrtEffectActive = !STATE.isCrtEffectActive;
-        if (STATE.isCrtEffectActive) {
-          DOM.crtContainer.classList.add('crt-screen');
-          DOM.btnCrtFx.textContent = 'CRT: ON';
-          DOM.btnCrtFx.className = 'px-2 py-0.5 bg-slate-800 hover:bg-slate-700 border border-slate-600 text-slate-300';
-        } else {
-          DOM.crtContainer.classList.remove('crt-screen');
-          DOM.btnCrtFx.textContent = 'CRT: OFF';
-          DOM.btnCrtFx.className = 'px-2 py-0.5 bg-slate-900 border border-slate-800 text-slate-500';
-        }
-      });
-
-      // Autoscroll Pin Toggle
-      DOM.btnAutoscroll.addEventListener('click', () => {
-        STATE.isAutoScrollPinned = !STATE.isAutoScrollPinned;
-        if (STATE.isAutoScrollPinned) {
-          DOM.btnAutoscroll.textContent = 'PIN: ON';
-          DOM.btnAutoscroll.className = 'px-2 py-0.5 bg-cyan-950/80 border border-cyan-800 text-cyan-300';
-          DOM.terminalFeed.scrollTop = DOM.terminalFeed.scrollHeight;
-        } else {
-          DOM.btnAutoscroll.textContent = 'PIN: OFF';
-          DOM.btnAutoscroll.className = 'px-2 py-0.5 bg-slate-900 border border-slate-800 text-slate-500';
-        }
-      });
-
-      // Clear Console
-      DOM.btnClearLogs.addEventListener('click', () => {
-        STATE.logs = [];
-        DOM.terminalFeed.innerHTML = '';
-        DOM.logCountBadge.textContent = '0 EVENTS';
-        appendLog('INFO', 'console.sys', 'Console log buffer cleared by operator.');
-      });
-
-      // Export Logs
-      DOM.btnExportLogs.addEventListener('click', () => {
-        const jsonContent = JSON.stringify(STATE.logs, null, 2);
-        const blob = new Blob([jsonContent], { type: 'application/json' });
-        const url = URL.createObjectURL(blob);
-        const a = document.createElement('a');
-        a.href = url;
-        a.download = `jack-os-logs-${new Date().toISOString().replace(/[:.]/g, '-')}.json`;
-        a.click();
-        URL.revokeObjectURL(url);
-      });
-
-      // Copy JSON Audit Button
-      DOM.btnCopyAudit.addEventListener('click', () => {
-        const text = DOM.auditJsonViewer.innerText;
-        navigator.clipboard.writeText(text).then(() => {
-          DOM.btnCopyAudit.textContent = 'COPIED!';
-          setTimeout(() => DOM.btnCopyAudit.textContent = 'COPY JSON', 1500);
-        });
-      });
-
-      // Config Modal Toggle
-      DOM.btnEndpointConfig.addEventListener('click', () => {
-        DOM.cfgApiUrl.value = CONFIG.apiBase;
-        DOM.cfgHealthInterval.value = CONFIG.healthInterval;
-        DOM.cfgTelemetryInterval.value = CONFIG.telemetryInterval;
-        DOM.configModal.classList.remove('hidden');
-      });
-
-      DOM.btnCloseModal.addEventListener('click', () => {
-        DOM.configModal.classList.add('hidden');
-      });
-
-      DOM.btnResetCfg.addEventListener('click', () => {
-        DOM.cfgApiUrl.value = getDefaultBaseUrl();
-        DOM.cfgHealthInterval.value = '5000';
-        DOM.cfgTelemetryInterval.value = '2000';
-      });
-
-      DOM.btnSaveCfg.addEventListener('click', () => {
-        CONFIG.apiBase = DOM.cfgApiUrl.value.trim().replace(/\/+$/, '');
-        CONFIG.healthInterval = parseInt(DOM.cfgHealthInterval.value, 10) || 5000;
-        CONFIG.telemetryInterval = parseInt(DOM.cfgTelemetryInterval.value, 10) || 2000;
-
-        DOM.footerApiTarget.textContent = CONFIG.apiBase || 'DYNAMIC (relative)';
-        DOM.configModal.classList.add('hidden');
-
-        appendLog('INFO', 'bridge.cfg', `Target backend reconfigured: ${CONFIG.apiBase || 'Relative paths'}. Restarting timers.`);
-        restartTimers();
-        pollHealth();
-      });
-
-      // -------------------------------------------------------------
-      // MISSION CLOCK & UPTIME TIMER
-      // -------------------------------------------------------------
-      function startClock() {
-        if (STATE.timers.clock) clearInterval(STATE.timers.clock);
-        STATE.timers.clock = setInterval(() => {
-          const now = new Date();
-          DOM.hudClock.textContent = now.toISOString().replace('T', ' ').substr(0, 23) + 'Z';
-
-          // Uptime calculation
-          STATE.uptimeSeconds = Math.floor((Date.now() - STATE.sessionStartTs) / 1000);
-          const hrs = String(Math.floor(STATE.uptimeSeconds / 3600)).padStart(2, '0');
-          const mins = String(Math.floor((STATE.uptimeSeconds % 3600) / 60)).padStart(2, '0');
-          const secs = String(STATE.uptimeSeconds % 60).padStart(2, '0');
-          DOM.uptimeCounter.textContent = `UP: ${hrs}:${mins}:${secs}`;
-
-          // Micro IOPS fluctuation in footer
-          const iops = Math.floor(2200 + Math.random() * 600);
-          DOM.footerIops.textContent = `${formatNumber(iops)} ops/sec`;
-        }, 200);
-      }
-
-      // -------------------------------------------------------------
-      // LIFECYCLE CONTROLLER
-      // -------------------------------------------------------------
-      function restartTimers() {
-        if (STATE.timers.health) clearInterval(STATE.timers.health);
-        if (STATE.timers.telemetry) clearInterval(STATE.timers.telemetry);
-
-        STATE.timers.health = setInterval(pollHealth, CONFIG.healthInterval);
-        STATE.timers.telemetry = setInterval(pollTelemetry, CONFIG.telemetryInterval);
-      }
-
-      function init() {
-        DOM.footerApiTarget.textContent = CONFIG.apiBase || 'DYNAMIC (relative)';
-        startClock();
-        startMockLogStream();
-        
-        // Initial health check & telemetry poll
-        pollHealth();
-        pollTelemetry();
-
-        // Start scheduled timers
-        restartTimers();
-
-        // Preload empty core matrix
-        renderCoreMatrix(new Array(STATE.mockCoresCount).fill(25));
-      }
-
-      // Start on load
-      if (document.readyState === 'loading') {
-        document.addEventListener('DOMContentLoaded', init);
-      } else {
-        init();
-      }
-
-    })();
+    // Clock Tick
+    setInterval(() => {
+      document.getElementById('clock').innerText = new Date().toUTCString().split(' ')[4] + ' UTC';
+    }, 1000);
   </script>
 </body>
 </html>
