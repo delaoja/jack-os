@@ -1,6 +1,6 @@
-# Instalación y configuración
+# Installation and Configuration
 
-## 1. Preparar Python
+## 1. Prepare Python
 
 ```powershell
 cd D:\monitor-ia\jack-os
@@ -10,46 +10,46 @@ python -m pip install --upgrade pip
 python -m pip install -r .\requirements.txt
 ```
 
-Si PowerShell bloquea la activación del entorno, puede usarse directamente el
-ejecutable:
+If PowerShell blocks environment activation, use the environment's Python
+executable directly:
 
 ```powershell
 .\.venv\Scripts\python.exe -m pip install -r .\requirements.txt
 ```
 
-## 2. Crear la configuración
+## 2. Create the configuration
 
 ```powershell
 Copy-Item .env.example .env
 notepad .env
 ```
 
-Completa los valores de Proxmox. `PROXMOX_TOKEN` debe contener el secreto del
-token, nunca el valor real en documentación o commits.
+Enter the Proxmox settings. `PROXMOX_TOKEN` must contain the token secret.
+Never place the actual secret in documentation or commits.
 
-## 3. Cuenta de Proxmox
+## 3. Proxmox account
 
-Se recomienda un usuario dedicado con permisos de lectura para inventario y
-telemetría. Los permisos de inicio/apagado solo deben concederse si se usará
-`/proxmox/power`, y deben limitarse a los recursos necesarios.
+Use a dedicated account with read permissions for inventory and telemetry.
+Grant start and shutdown permissions only when `/proxmox/power` is required,
+and limit those permissions to the necessary resources.
 
 ## 4. Gemini
 
-`GOOGLE_API_KEY` es opcional para inventario y telemetría. Es necesaria para
-`/ai/chat` y para evaluaciones de IA. Si no está definida, el servicio usa una
-respuesta heurística de respaldo y no realiza llamadas externas.
+`GOOGLE_API_KEY` is optional for inventory and telemetry. It is required for
+`/ai/chat` and AI assessments. If it is not defined, the service uses a
+fallback heuristic response and makes no external AI request.
 
-## 5. Iniciar el servicio
+## 5. Start the service
 
 ```powershell
 python -m uvicorn app.main:app --host 127.0.0.1 --port 8080
 ```
 
-Visita `http://127.0.0.1:8080/`. Para detener el servicio, usa `Ctrl+C`.
+Visit `http://127.0.0.1:8080/`. Stop the service with `Ctrl+C`.
 
-## 6. Primera comprobación
+## 6. First verification
 
-En otra terminal:
+In a second terminal:
 
 ```powershell
 Invoke-RestMethod http://127.0.0.1:8080/health
@@ -57,6 +57,6 @@ Invoke-RestMethod http://127.0.0.1:8080/telemetry
 Invoke-RestMethod http://127.0.0.1:8080/proxmox/resources
 ```
 
-Si falla el acceso a Proxmox, revisa host, puerto, token, permisos y
-certificado. Si el endpoint `/telemetry` responde con `LOCAL_FALLBACK`, la
-aplicación está funcionando, pero no está usando datos del nodo Proxmox.
+If Proxmox access fails, check the host, port, token, permissions, and
+certificate. If `/telemetry` returns `LOCAL_FALLBACK`, the application is
+running but is not using Proxmox node data.

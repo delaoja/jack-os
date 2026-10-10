@@ -1,47 +1,47 @@
-# Operación
+# Operations
 
-## Inicio normal
+## Start the service
 
 ```powershell
 .\.venv\Scripts\Activate.ps1
 python -m uvicorn app.main:app --host 127.0.0.1 --port 8080
 ```
 
-Abre `http://127.0.0.1:8080/` y verifica primero el indicador de telemetría.
+Open `http://127.0.0.1:8080/` and check the telemetry indicator first.
 
-## Orden recomendado de revisión
+## Recommended review sequence
 
-1. `GET /health`: confirma que la API está disponible.
-2. `GET /telemetry`: verifica fuente, CPU, memoria, disco y red.
-3. `GET /proxmox/resources`: confirma el inventario.
-4. Revisa el estado y VMID antes de cualquier acción.
-5. Usa el chat de IA para diagnóstico, no como autorización automática.
-6. Realiza operaciones de energía solo sobre recursos de prueba.
+1. `GET /health`: confirm that the API is available.
+2. `GET /telemetry`: verify the source, CPU, memory, disk, and network values.
+3. `GET /proxmox/resources`: confirm the current inventory.
+4. Review the resource state and VMID before any action.
+5. Use the AI chat for diagnosis, not as automatic authorization.
+6. Perform power operations only on test resources.
 
-## Telemetría
+## Telemetry
 
-La fuente esperada es `PROXMOX_VE_CORE`. Si aparece `LOCAL_FALLBACK`, revisa
-la conexión o el token de Proxmox. La velocidad de red puede ser `0` en la
-primera muestra porque necesita una muestra anterior para calcular la tasa.
+The expected source is `PROXMOX_VE_CORE`. If the source is
+`LOCAL_FALLBACK`, check the Proxmox connection and token. Network rate may be
+`0` in the first sample because it requires a previous sample for comparison.
 
-## Inventario
+## Inventory
 
-El inventario incluye:
+The inventory includes:
 
-- Tipo: `VM` o `LXC`.
+- Type: `VM` or `LXC`.
 - VMID.
-- Nombre.
-- Nodo.
-- Estado.
-- CPU y memoria.
-- Interfaces de red.
-- IPs conocidas.
-- Snapshots disponibles.
-- Indicadores de configuración GPU cuando existen.
+- Name.
+- Node.
+- Status.
+- CPU and memory usage.
+- Network interfaces.
+- Known IP addresses.
+- Available snapshots.
+- GPU configuration indicators when present.
 
-## Acciones de energía
+## Power operations
 
-La ruta es:
+The endpoint is:
 
 ```text
 POST /proxmox/power
@@ -56,34 +56,33 @@ Payload:
 }
 ```
 
-Acciones permitidas: `start`, `shutdown` y `stop`. `shutdown` debe preferirse
-para una operación graceful. `stop` puede interrumpir operaciones del sistema
-invitado y provocar pérdida de datos no sincronizados.
+Allowed actions are `start`, `shutdown`, and `stop`. Prefer `shutdown` for a
+graceful operation. `stop` can interrupt guest activity and cause unsynchronized
+data loss.
 
-Antes de probar:
+Before testing:
 
-- Confirma que el VMID sea correcto.
-- Verifica el estado actual.
-- Usa una VM o LXC no crítico.
-- Comprueba los permisos del token.
-- Mantén un registro del operador y del motivo.
+- Confirm the VMID.
+- Check the current state.
+- Use a non-critical VM or LXC container.
+- Verify the token permissions.
+- Record the operator and the reason for the change.
 
-## Diagnóstico de IA
+## AI diagnostics
 
-El chat recibe la pregunta, la telemetría y el inventario actual. Una consulta
-útil debe ser específica, por ejemplo:
+The chat receives the operator's question, current telemetry, and inventory. A
+useful question should be specific, for example:
 
 ```text
-Analiza el consumo actual y señala qué recursos requieren revisión.
+Analyze the current resource usage and identify resources that require review.
 ```
 
-La respuesta puede contener una recomendación textual y un nivel de riesgo.
-Valida siempre la información contra Proxmox antes de actuar.
+The response may contain a recommendation and a risk level. Always validate
+the information against Proxmox before taking action.
 
-## Simulación de remediación
+## Remediation simulation
 
-`POST /remediate/dry-run` sirve para probar el flujo de análisis sin cambiar
-Proxmox:
+`POST /remediate/dry-run` tests the analysis workflow without changing Proxmox:
 
 ```json
 {
@@ -95,20 +94,20 @@ Proxmox:
 }
 ```
 
-La respuesta debe indicar `execution_status=SIMULATED`.
+The response should report `execution_status=SIMULATED`.
 
-## Apagado
+## Shutdown
 
-Para detener el servicio de JACK-OS usa `Ctrl+C` en la terminal de Uvicorn.
-Para detener una VM o un LXC, usa el procedimiento de cambio controlado de
-Proxmox, no una recomendación textual de la IA sin validación.
+Stop JACK-OS with `Ctrl+C` in the Uvicorn terminal. To stop a VM or LXC
+container, use a controlled Proxmox change procedure rather than acting on an
+unvalidated AI recommendation.
 
-## Diagnóstico de fallos
+## Troubleshooting
 
-| Síntoma | Revisión |
+| Symptom | Check |
 |---|---|
-| `LOCAL_FALLBACK` | Host, puerto, token, permisos y certificado Proxmox. |
-| Inventario vacío | Nodo disponible y permisos de lectura. |
-| Error Gemini | `GOOGLE_API_KEY`, modelo y conectividad externa. |
-| Dashboard no carga | Uvicorn, puerto 8080 y directorio `app/ui`. |
-| Acción rechazada | VMID, estado, permisos y tipo de recurso. |
+| `LOCAL_FALLBACK` | Proxmox host, port, token, permissions, and certificate. |
+| Empty inventory | Node availability and read permissions. |
+| Gemini error | `GOOGLE_API_KEY`, model name, and external connectivity. |
+| Dashboard does not load | Uvicorn, port `8080`, and `app/ui`. |
+| Action rejected | VMID, resource state, permissions, and resource type. |

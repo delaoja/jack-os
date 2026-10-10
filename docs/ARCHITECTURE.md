@@ -1,63 +1,64 @@
-# Arquitectura de JACK-OS
+# JACK-OS Architecture
 
-## Resumen
+## Overview
 
-`FinalBranch` combina una aplicación web FastAPI con un cliente de Proxmox
-reutilizable. El navegador consume endpoints HTTP y no habla directamente con
-Proxmox ni con Gemini. La API concentra la validación de los contratos,
-obtiene telemetría, consulta el inventario y solicita diagnósticos a la IA.
+`FinalBranch` combines a FastAPI web application with a reusable Proxmox
+client. The browser communicates with HTTP endpoints; it does not connect
+directly to Proxmox or Gemini. The API validates request and response models,
+collects telemetry, retrieves inventory, and requests AI diagnostics.
 
-## Componentes
+## Components
 
 ### `app/main.py`
 
-Crea la aplicación FastAPI, registra el ciclo de vida, habilita CORS, monta los
-archivos estáticos y sirve `app/ui/index.html` en `/`.
+Creates the FastAPI application, registers the lifecycle hooks, enables CORS,
+mounts static files, and serves `app/ui/index.html` at `/`.
 
 ### `app/config.py`
 
-Carga `.env` mediante `python-dotenv` y construye `Settings` con Pydantic.
-Centraliza host, puerto, nodo, credenciales de Proxmox y modelo Gemini.
+Loads `.env` through `python-dotenv` and builds the Pydantic `Settings` model.
+It centralizes the host, port, node identifier, Proxmox credentials, and
+Gemini model settings.
 
 ### `app/api/routes.py`
 
-Define los contratos Pydantic y las rutas de salud, telemetría, procesos,
-remediación simulada, inventario, energía y chat.
+Defines the Pydantic contracts and the health, telemetry, process, dry-run
+remediation, inventory, power, and chat endpoints.
 
 ### `app/services/telemetry.py`
 
-Primero consulta `/nodes/{node}/status` de Proxmox. Si no hay token o la
-consulta no produce datos, usa `psutil` para devolver métricas locales. La
-velocidad de red se calcula a partir de dos muestras consecutivas.
+First queries `/nodes/{node}/status` on Proxmox. If no token is configured or
+the query returns no data, it uses `psutil` to provide local metrics. Network
+throughput is calculated from two consecutive samples.
 
 ### `app/services/ai_diagnostics.py`
 
-Construye el cliente Gemini cuando existe `GOOGLE_API_KEY` y envía contexto
-operativo para obtener una evaluación textual. Sin clave, devuelve una
-respuesta heurística simulada. La IA no ejecuta por sí misma una acción.
+Creates the Gemini client when `GOOGLE_API_KEY` is available and sends
+operational context for a text assessment. Without a key, it returns a
+simulated heuristic response. The AI does not execute an action by itself.
 
 ### `scripts/proxmox_agent.py`
 
-Implementa `ProxmoxClient`, normalización de VMs QEMU y contenedores LXC,
-configuración, snapshots, IPs y operaciones de energía. También contiene una
-interfaz de consola para el cliente de Proxmox.
+Implements `ProxmoxClient`, QEMU VM and LXC container normalization,
+configuration and snapshot queries, IP discovery, and power operations. It
+also contains the Proxmox command-line interface.
 
 ### `app/ui/index.html`
 
-Dashboard estático con pestañas de telemetría, recursos y AI Copilot. Usa
-`fetch` contra los endpoints de la misma aplicación.
+Provides the static dashboard with telemetry, resources, and AI Copilot tabs.
+It uses `fetch` to call endpoints on the same application.
 
-## Flujo de telemetría
+## Telemetry flow
 
 ```text
 GET /telemetry
   -> TelemetryCollector.get_system_metrics()
   -> Proxmox /nodes/{node}/status
-  -> normalización CPU/memoria/disco/red
-  -> respuesta Pydantic SystemMetricsResponse
+  -> CPU/memory/disk/network normalization
+  -> Pydantic SystemMetricsResponse
 ```
 
-Cuando Proxmox no está disponible:
+When Proxmox is unavailable:
 
 ```text
 GET /telemetry
@@ -67,7 +68,7 @@ GET /telemetry
   -> psutil.net_io_counters()
 ```
 
-## Flujo de inventario
+## Inventory flow
 
 ```text
 GET /proxmox/resources
@@ -75,34 +76,33 @@ GET /proxmox/resources
   -> /nodes
   -> /nodes/{node}/qemu
   -> /nodes/{node}/lxc
-  -> config, snapshots e IPs
-  -> lista normalizada de recursos
+  -> configuration, snapshots, and IPs
+  -> normalized resource list
 ```
 
-El inventario distingue `type=VM` para QEMU y `type=LXC` para contenedores.
+The inventory uses `type=VM` for QEMU resources and `type=LXC` for containers.
 
-## Flujo de IA
+## AI flow
 
-`POST /ai/chat` obtiene la pregunta del operador, telemetría actual e
-inventario, y los envía a `AIDiagnosticEngine`. La respuesta se devuelve como
-texto, una acción sugerida opcional y un nivel de riesgo.
+`POST /ai/chat` receives the operator's question, current telemetry, and
+inventory, then sends them to `AIDiagnosticEngine`. The response contains text,
+an optional suggested action, and a risk level.
 
-`POST /remediate/dry-run` ejecuta el análisis de una acción solicitada, pero
-responde con `execution_status=SIMULATED`; no debe interpretarse como una
-ejecución real.
+`POST /remediate/dry-run` analyzes a requested action but returns
+`execution_status=SIMULATED`; it must not be interpreted as a real operation.
 
-## Flujo de energía
+## Power-operation flow
 
-`POST /proxmox/power` recibe un VMID y una acción permitida: `start`,
-`shutdown` o `stop`. Consulta el inventario actual, localiza el recurso y
-llama a `ProxmoxClient.power_action`. La ruta actual no agrega autenticación,
-allowlist ni confirmación adicional; estas protecciones son requisitos
-pendientes antes de una exposición productiva.
+`POST /proxmox/power` receives a VMID and one allowed action: `start`,
+`shutdown`, or `stop`. It retrieves the current inventory, locates the
+resource, and calls `ProxmoxClient.power_action`. The current route does not
+add authentication, an allowlist, or an additional confirmation step. These
+controls are required before production exposure.
 
-## Decisiones de diseño
+## Design decisions
 
-- Pydantic valida la forma de entrada y salida.
-- `requests` se usa para el API Proxmox.
-- `psutil` permite operar en modo degradado para telemetría local.
-- Gemini es opcional y no bloquea el inventario básico.
-- Los secretos se cargan desde el entorno y no deben escribirse en código.
+- Pydantic validates request and response shapes.
+- `requests` calls the Proxmox API.
+- `psutil` provides degraded-mode local telemetry.
+- Gemini is optional and does not block basic inventory.
+- Secrets are loaded from the environment and must not be written in code.
