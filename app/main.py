@@ -10,6 +10,7 @@ from fastapi.responses import FileResponse
 
 from app.api.routes import router
 from app.config import settings
+from agents.v_core.brain_router import router as v_core_router
 
 logger = logging.getLogger("jack_os")
 
@@ -35,6 +36,7 @@ app.add_middleware(
 
 # Core API routes
 app.include_router(router)
+app.include_router(v_core_router)
 
 # Mount Frontend UI
 ui_dir = os.path.join(os.path.dirname(__file__), "ui")

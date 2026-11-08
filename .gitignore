@@ -6,4 +6,8 @@ venv/
 env/
 *.log
 .env
+data/
+*.ckl
+*.docx
+*.pdf
 .DS_Store
