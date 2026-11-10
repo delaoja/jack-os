@@ -277,39 +277,56 @@
       if (!msg) return;
 
       input.value = '';
-      box.innerHTML += `
-        <div class="p-3 bg-purple-950/30 border border-purple-800/50 rounded-lg text-slate-200">
-          <strong class="text-purple-300">Andrei:</strong> ${msg}
-        </div>
-      `;
+      const userMessage = document.createElement('div');
+      userMessage.className = 'p-3 bg-purple-950/30 border border-purple-800/50 rounded-lg text-slate-200';
+      const userName = document.createElement('strong');
+      userName.className = 'text-purple-300';
+      userName.textContent = 'Andrei:';
+      userMessage.append(userName, document.createTextNode(` ${msg}`));
+      box.appendChild(userMessage);
       box.scrollTop = box.scrollHeight;
 
       try {
-        const res = await fetch('/ai/chat', {
+        const res = await fetch('/v1/v-core/chat', {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({ message: msg })
+          body: JSON.stringify({
+            message: msg,
+            save_to_memory: false,
+            memory_category: 'operational',
+            provider: 'ollama',
+            local_model: 'llama3.1'
+          })
         });
+        if (!res.ok) throw new Error(`V-Core returned HTTP ${res.status}`);
         const data = await res.json();
-        
-        let actionBadge = '';
-        if (data.suggested_action) {
-          actionBadge = `
-            <div class="mt-2 p-2 bg-black/60 rounded border border-slate-800 text-emerald-400 mono text-[11px]">
-              # Proposed action / command:<br><code>${data.suggested_action}</code>
-            </div>
-          `;
+
+        const aiMessage = document.createElement('div');
+        aiMessage.className = 'p-3 bg-slate-800/50 border border-slate-700/60 rounded-lg text-slate-300 space-y-1.5';
+        const aiMessageLine = document.createElement('div');
+        const aiName = document.createElement('strong');
+        aiName.className = 'text-purple-400';
+        aiName.textContent = 'Jack (AI Copilot):';
+        aiMessageLine.appendChild(aiName);
+
+        if (data.provider_used === 'ollama' || data.provider_used === 'gemini' || data.provider_used === 'gemini_fallback') {
+          const providerBadge = document.createElement('span');
+          providerBadge.className = 'ml-2 px-1.5 py-0.5 rounded bg-slate-900 text-slate-400 border border-slate-700 text-[10px]';
+          providerBadge.textContent = data.provider_used === 'ollama' ? '[RTX 4060]' : '[Cloud]';
+          aiMessageLine.appendChild(providerBadge);
         }
 
-        box.innerHTML += `
-          <div class="p-3 bg-slate-800/50 border border-slate-700/60 rounded-lg text-slate-300 space-y-1.5">
-            <div><strong class="text-purple-400">Jack (AI Copilot):</strong> ${data.reply}</div>
-            ${actionBadge}
-          </div>
-        `;
+        aiMessageLine.appendChild(document.createTextNode(` ${data.reply}`));
+        aiMessage.appendChild(aiMessageLine);
+        box.appendChild(aiMessage);
         box.scrollTop = box.scrollHeight;
       } catch (e) {
-        box.innerHTML += `<div class="p-2 text-rose-400">Error connecting to the AI bridge.</div>`;
+        console.error('V-Core chat error', e);
+        const errorMessage = document.createElement('div');
+        errorMessage.className = 'p-2 text-rose-400';
+        errorMessage.textContent = 'Error connecting to the AI bridge.';
+        box.appendChild(errorMessage);
+        box.scrollTop = box.scrollHeight;
       }
     }
 
