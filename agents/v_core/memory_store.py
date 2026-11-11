@@ -8,12 +8,7 @@ from dotenv import load_dotenv
 
 load_dotenv()
 
-api_key = os.getenv("GEMINI_API_KEY") or os.getenv("GOOGLE_API_KEY")
-if api_key:
-    genai.configure(api_key=api_key)
-
 COLLECTION_NAME = "v_tactical_memory"
-
 
 class TacticalMemory:
     def __init__(self, host: str = "", port: int = 6333):
@@ -24,6 +19,12 @@ class TacticalMemory:
             local_path = os.getenv("QDRANT_LOCAL_PATH", "C:/v_core_data/qdrant_storage")
             os.makedirs(local_path, exist_ok=True)
             self.client = QdrantClient(path=local_path)
+        
+        # Instanciación segura del nuevo SDK
+        api_key = os.getenv("GEMINI_API_KEY") or os.getenv("GOOGLE_API_KEY")
+        if not api_key:
+            raise RuntimeError("Missing GEMINI_API_KEY in .env file")
+        self.genai_client = genai.Client(api_key=api_key)
 
     def _ensure_collection(self, vector_size: int) -> None:
         collections = [c.name for c in self.client.get_collections().collections]
@@ -41,23 +42,17 @@ class TacticalMemory:
             )
 
     def _get_embedding(self, text: str) -> list[float]:
-        current_key = os.getenv("GEMINI_API_KEY") or os.getenv("GOOGLE_API_KEY")
-        if not current_key:
-            raise RuntimeError("Missing GEMINI_API_KEY or GOOGLE_API_KEY in .env file")
-        genai.configure(api_key=current_key)
-
-        for model_name in ("models/gemini-embedding-001", "models/embedding-001"):
-            try:
-                result = genai.embed_content(
-                    model=model_name,
-                    content=text,
-                )
-                vector = result["embedding"]
-                self._ensure_collection(len(vector))
-                return vector
-            except Exception:
-                continue
-        raise RuntimeError("No compatible Gemini embedding model found for this API key.")
+        try:
+            # Sintaxis del SDK v0.8.0+
+            response = self.genai_client.models.embed_content(
+                model="text-embedding-004",
+                contents=text,
+            )
+            vector = response.embeddings[0].values
+            self._ensure_collection(len(vector))
+            return vector
+        except Exception as e:
+            raise RuntimeError(f"Fallo al generar embedding: {str(e)}")
 
     def store_memory(self, text: str, category: str = "general") -> str:
         vector = self._get_embedding(text)
