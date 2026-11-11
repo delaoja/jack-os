@@ -2,7 +2,7 @@ import os
 import requests
 from functools import lru_cache
 
-import google.generativeai as genai
+from google import genai
 from dotenv import load_dotenv
 from fastapi import APIRouter, HTTPException
 from pydantic import BaseModel, ConfigDict, Field
@@ -22,7 +22,7 @@ class ChatRequest(BaseModel):
     message: str = Field(min_length=1)
     save_to_memory: bool = False
     memory_category: str = "operational"
-    provider: str = "ollama"  # Default to local GPU to save tokens
+    provider: str = "gemini"  # Inversión táctica: Nube por defecto para fluidez
     local_model: str = "llama3.1"
 
 
@@ -58,13 +58,14 @@ def chat(request: ChatRequest) -> ChatResponse:
         
         # 4. Inject Telemetry & ODST Tactical Lock
         telemetry_inject = (
-            f"\n\n[LIVE TELEMETRY INJECT - DO NOT MENTION UNLESS ASKED]\n"
+            f"\n\n[SYSTEM BACKGROUND DATA - SILENT INGESTION]\n"
             f"La Legion (Local): {local_data} | {gpu_data}\n"
             f"the-banished (HQ): {proxmox_data}\n\n"
             f"CRITICAL DIRECTIVE: You are V. Execute Protocol ODST. "
-            f"DO NOT use generic greetings (e.g., 'Hola', 'Me alegra verte'). "
-            f"DO NOT be chatty. Your output MUST be strictly scannable, direct, and use bullet points for telemetry. "
-            f"Act as a tactical military UI."
+            f"DO NOT use generic greetings (e.g., 'Hola', 'Me alegra verte'). DO NOT be chatty. "
+            f"CONDITIONAL TELEMETRY RULE: You currently hold live system data in context. ONLY output hardware telemetry, temperatures, or node status if the user EXPLICITLY asks for a status report, diagnostic, or system update. "
+            f"If the user asks about non-technical topics (e.g., food, casual conversation, advice), IGNORE the telemetry entirely and answer directly, maintaining the cold, tactical ODST persona. "
+            f"If telemetry is requested, use strict scannable bullet points."
         )
         prompt = base_prompt + telemetry_inject
 
@@ -90,12 +91,15 @@ def chat(request: ChatRequest) -> ChatResponse:
         # --- ROUTE B: CLOUD INFERENCE (GEMINI FALLBACK OR PRIMARY) ---
         if actual_provider in ["gemini", "gemini_fallback"]:
             api_key = os.getenv("GOOGLE_API_KEY") or os.getenv("GEMINI_API_KEY")
-            if api_key:
-                genai.configure(api_key=api_key)
             
+            # Nuevo cliente de la API google.genai
+            client = genai.Client(api_key=api_key)
             preferred_model = os.getenv("GEMINI_MODEL", "gemini-3.0-flash")
-            model = genai.GenerativeModel(preferred_model)
-            response = model.generate_content(prompt)
+            
+            response = client.models.generate_content(
+                model=preferred_model,
+                contents=prompt
+            )
             reply = response.text
 
         if not reply or not reply.strip():

@@ -1,0 +1,14 @@
+services:
+  v-core:
+    build: .
+    ports:
+      - "8000:8000"
+    volumes:
+      - ./agents/v_core/qdrant_storage:/app/agents/v_core/qdrant_storage
+    environment:
+      GEMINI_API_KEY: ${GEMINI_API_KEY}
+      OLLAMA_HOST: ${OLLAMA_HOST}
+      PROXMOX_HOST: ${PROXMOX_HOST}
+      PROXMOX_USER: ${PROXMOX_USER}
+      PROXMOX_PASSWORD: ${PROXMOX_PASSWORD}
+    restart: unless-stopped
