@@ -94,7 +94,7 @@ def chat(request: ChatRequest) -> ChatResponse:
             
             # Nuevo cliente de la API google.genai
             client = genai.Client(api_key=api_key)
-            preferred_model = os.getenv("GEMINI_MODEL", "gemini-3.0-flash")
+            preferred_model = os.getenv("GEMINI_MODEL", "gemini-3.6-flash")
             
             response = client.models.generate_content(
                 model=preferred_model,
