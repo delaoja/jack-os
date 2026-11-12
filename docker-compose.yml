@@ -2,7 +2,7 @@ services:
   v-core:
     build: .
     ports:
-      - "8080:8080"
+      - "8080:8000"
     volumes:
       - ./agents/v_core/qdrant_storage:/app/agents/v_core/qdrant_storage
     environment:
