@@ -160,6 +160,7 @@
   </div>
 
   <script>
+    const API_BASE_URL = 'http://192.168.86.27:8080';
     let currentResources = [];
     let resourcesLoading = false;
 
@@ -184,7 +185,7 @@
     // Telemetry Polling (Tab 1)
     async function updateTelemetry() {
       try {
-        const res = await fetch('/telemetry');
+        const res = await fetch(`${API_BASE_URL}/telemetry`);
         if (!res.ok) return;
         const data = await res.json();
         document.getElementById('cpu-pct').innerText = `${data.cpu.percent}%`;
@@ -216,7 +217,7 @@
       resourcesLoading = true;
       const tbody = document.getElementById('resources-body');
       try {
-        const res = await fetch('/proxmox/resources');
+        const res = await fetch(`${API_BASE_URL}/proxmox/resources`);
         if (!res.ok) throw new Error(`Proxmox inventory returned HTTP ${res.status}`);
         const data = await res.json();
         currentResources = Array.isArray(data) ? data : [];
@@ -272,7 +273,7 @@
     async function triggerPowerAction(vmid, action) {
       if (!confirm(`Confirm tactical command: ${action.toUpperCase()} for VMID ${vmid}?`)) return;
       try {
-        const res = await fetch('/proxmox/power', {
+        const res = await fetch(`${API_BASE_URL}/proxmox/power`, {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
           body: JSON.stringify({ vmid: vmid, action: action })
@@ -304,7 +305,7 @@
       box.scrollTop = box.scrollHeight;
 
       try {
-        const res = await fetch('/v1/v-core/chat', {
+        const res = await fetch(`${API_BASE_URL}/v1/v-core/chat`, {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
           body: JSON.stringify({
