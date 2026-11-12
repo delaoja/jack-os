@@ -42,17 +42,21 @@ class TacticalMemory:
             )
 
     def _get_embedding(self, text: str) -> list[float]:
-        try:
-            # Sintaxis del SDK v0.8.0+
-            response = self.genai_client.models.embed_content(
-                model="models/embedding-001",
-                contents=text,
-            )
-            vector = response.embeddings[0].values
-            self._ensure_collection(len(vector))
-            return vector
-        except Exception as e:
-            raise RuntimeError(f"Fallo al generar embedding: {str(e)}")
+        # redundancy ring: try legacy and current models
+        for model_name in ("text-embedding-004", "models/embedding-001", "gemini-embedding-001"):
+            try:
+                # Strict sintax of new SDK v0.8.0+
+                response = self.genai_client.models.embed_content(
+                    model=model_name,
+                    contents=text,
+                )
+                vector = response.embeddings[0].values
+                self._ensure_collection(len(vector))
+                return vector
+            except Exception:
+                continue # if fail, intercepts the exception and tries the next model in the redundancy ring
+                
+        raise RuntimeError("critical failure: No model in the redundancy ring responded.")
 
     def store_memory(self, text: str, category: str = "general") -> str:
         vector = self._get_embedding(text)
