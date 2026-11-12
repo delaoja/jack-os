@@ -45,7 +45,7 @@ class TacticalMemory:
         try:
             # Sintaxis del SDK v0.8.0+
             response = self.genai_client.models.embed_content(
-                model="text-embedding-001",
+                model="models/embedding-001",
                 contents=text,
             )
             vector = response.embeddings[0].values
