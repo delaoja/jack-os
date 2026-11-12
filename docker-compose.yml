@@ -11,4 +11,5 @@ services:
       PROXMOX_HOST: ${PROXMOX_HOST}
       PROXMOX_USER: ${PROXMOX_USER}
       PROXMOX_PASSWORD: ${PROXMOX_PASSWORD}
+      QDRANT_LOCAL_PATH: "/app/agents/v_core/qdrant_storage"
     restart: unless-stopped
